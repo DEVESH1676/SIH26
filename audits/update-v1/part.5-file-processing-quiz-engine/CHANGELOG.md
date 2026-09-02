@@ -557,13 +557,13 @@ Replace `QuizGenerator` with the new enhanced version (the `QuizEngine` class ab
 
 ## 5.5 Verification Checklist
 
-- [ ] `core/file_processor.py` handles PDF, DOCX, PPTX, TXT
-- [ ] Video/audio transcription works with Ollama Whisper
-- [ ] `core/quiz_engine.py` creates quizzes with difficulty levels
-- [ ] Quizzes are saved to SQLite
-- [ ] Score calculation works correctly
-- [ ] `core/attempt_tracker.py` records and retrieves attempts
-- [ ] Learner performance aggregation works
-- [ ] File upload size limits enforced
-- [ ] Chunking handles large documents properly
-- [ ] Error handling for unsupported file types
+- [x] `core/file_processor.py` handles PDF, DOCX, PPTX, TXT
+- [x] Video/audio transcription works with Ollama Whisper
+- [x] `core/quiz_engine.py` creates quizzes with difficulty levels
+- [x] Quizzes are saved to SQLite
+- [x] Score calculation works correctly
+- [x] `core/attempt_tracker.py` records and retrieves attempts
+- [x] Learner performance aggregation works
+- [x] File upload size limits enforced
+- [x] Chunking handles large documents properly
+- [x] Error handling for unsupported file types

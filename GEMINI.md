@@ -1,24 +1,25 @@
-# Nexus AI Ticket Intelligence Platform — Project Context
+# MoSPI AI Learning Platform — Project Context
 
 ## Gemini Added Memories
 - **Git Workflow**: Always git commit after work is done. Commit messages must be precise, stating exactly what was done and listing the specific files changed. Avoid complex or mismatched messages.
+- **Rules Adherence**: Always respect `.agents/rules/` for phase-driven development, workspace collaboration, and progress tracking.
 
 ## Project Overview
-Nexus AI is an enterprise-grade IT ticket routing and resolution system. It has transitioned from a monolithic Streamlit app to a **Decoupled Architecture**: a FastAPI backend providing a brain-as-a-service, and a premium React/Vite frontend.
+The MoSPI AI Learning Platform is an intelligent learning management system built for the Ministry of Statistics and Programme Implementation. It evaluates user competency profiles (based on the FRAC model), identifies skill gaps, recommends iGOT training courses, and conducts dynamically generated subjective and objective assessments.
 
 ### Core Stack
 - **Frontend**: React 18, Vite, Tailwind CSS (located in `frontend-v2/`).
 - **Backend**: FastAPI (Python 3.14+).
-- **Vector Database**: ChromaDB (Local Persistent).
+- **Vector Database**: ChromaDB (Local Persistent - stores course catalog).
 - **Embeddings**: `all-MiniLM-L6-v2` (Sentence-Transformers).
 - **LLM Orchestration**: Direct REST calls to Ollama (local) and Groq API (cloud free tier).
-- **Data Storage**: SQLite (for feedback and resolution tracking).
+- **Data Storage**: SQLite (`learner_progress.db` for tracking competency profiles and learning events).
 
 ### Key Architectural Patterns
-1. **Confidence-Based Cascade**: Managed by `TicketClassifier` in the backend. 
-2. **Decoupled Agent Trio**: `TriageAgent`, `ResolutionAgent`, and `AutomationDiscoveryAgent` in `core/agent.py`.
-3. **Master SSE Pipeline**: Backend streams real-time updates via Server-Sent Events (SSE) to the frontend.
-4. **Architectural Observability**: A "Nexus Blueprint" tab in the UI using Mermaid.js to visualize live logic flows.
+1. **Competency-Based Evaluation**: Managed by `CompetencyAnalyzer` (evaluates FRAC Domain, Behavioral, and Functional skills).
+2. **Learning Agents**: `ProfileAgent`, `PathwayAgent`, and `AssessmentAgent` in `core/agent.py`.
+3. **Master SSE Pipeline**: Backend streams real-time updates via Server-Sent Events (SSE) to the frontend learning dashboard.
+4. **MoSPI LMS Architecture Blueprint**: Visualized in the frontend admin dashboard using Mermaid.js.
 
 ---
 
@@ -53,23 +54,18 @@ npm install
 
 ### Code Structure
 - **`main.py`**: FastAPI entry point.
-- **`api/routes/`**: API endpoints (Pipeline, Blueprint, Health).
-- **`core/`**: Foundational AI logic (Classifier, RAG, Agents).
-- **`frontend-v2/`**: The modern React application.
-- **`.planning/`**: Structured project documentation using the GSD (Get Shit Done) framework.
+- **`api/routes/`**: API endpoints (Pipeline, Assessment, Health).
+- **`core/`**: Foundational AI logic (CompetencyAnalyzer, CourseRecommender, Agents).
+- **`frontend-v2/`**: The modern React application with LMS dashboards.
+- **`.planning/`**: Structured project documentation using the GSD framework.
 
 ### Guidelines
 - **Bypass LangChain**: Use direct `requests` to Ollama/Groq for stability.
 - **Precision Commits**: Messages must name modified files and specific actions.
-- **Validation-First**: Implement Zod validation in the frontend to prevent 422 errors.
+- **Validation-First**: Implement Zod validation in the frontend.
 
 ---
 
-## Current Status (Milestone v4.0)
-- **Phase 1 (Backend Extraction)**: COMPLETE
-- **Phase 2 (Frontend Scaffolding)**: COMPLETE
-- **Phase 3 (Robustness & State Sync)**: COMPLETE
-- **Phase 4 (Architectural Observability)**: COMPLETE
-- **Phase 5 (The Purge)**: PLANNED
-
-*Refer to `tillnow.md` for a detailed log of recent changes and `.planning/ROADMAP.md` for upcoming features.*
+## Current Status (v5.0 Migration)
+- **Phase 1 (Gap Assessment & Core Migration)**: COMPLETE (Transitioned from legacy IT ticketing to MoSPI LMS, implemented core AI agents).
+- **Phase 5 (The Purge)**: IN PROGRESS (Cleaning up legacy IT ticket logic, tests, and data).

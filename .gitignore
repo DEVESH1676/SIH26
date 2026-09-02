@@ -35,3 +35,19 @@ graphify-out/
 # Depending on your preference, you could also ignore the dataset.
 # Uncomment the line below if the CSV gets too large (>100MB) for GitHub.
 # data/*.csv
+
+# ── Learning Platform ─────────────────────────────────────
+data/learning.db
+data/uploads/*
+!data/uploads/.gitkeep
+chroma_db/.chroma
+.env
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+frontend-v2/dist/
+frontend-v2/node_modules/

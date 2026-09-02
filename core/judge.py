@@ -11,7 +11,9 @@ import json
 import requests
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import config
+from config.settings import get_settings
+
+settings = get_settings()
 
 
 class SubjectiveAssessor:
@@ -50,7 +52,7 @@ Return ONLY valid JSON (no markdown fences, no explanation outside JSON):
     def _call_judge_llm(self, prompt: str) -> str:
         """Call Groq/Ollama for evaluation."""
         try:
-            if config.GROQ_API_KEY:
+            if settings.groq_api_key:
                 resp = requests.post(
                     "https://api.groq.com/openai/v1/chat/completions",
                     headers={
@@ -58,7 +60,7 @@ Return ONLY valid JSON (no markdown fences, no explanation outside JSON):
                         "Content-Type": "application/json",
                     },
                     json={
-                        "model": config.GROQ_MODEL,
+                        "model": settings.groq_model,
                         "messages": [{"role": "user", "content": prompt}],
                         "temperature": 0.1,
                         "max_tokens": 300,
@@ -69,9 +71,9 @@ Return ONLY valid JSON (no markdown fences, no explanation outside JSON):
                 return resp.json()["choices"][0]["message"]["content"].strip()
             else:
                 resp = requests.post(
-                    f"{config.OLLAMA_BASE_URL}/api/chat",
+                    f"{settings.ollama_base_url}/api/chat",
                     json={
-                        "model": config.OLLAMA_MODEL,
+                        "model": settings.ollama_model,
                         "messages": [{"role": "user", "content": prompt}],
                         "stream": False,
                         "options": {"temperature": 0.1},

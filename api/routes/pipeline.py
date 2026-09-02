@@ -12,7 +12,7 @@ from collections.abc import AsyncIterable
 from fastapi import APIRouter, Query, Request
 from fastapi.sse import EventSourceResponse, ServerSentEvent
 
-import config
+
 from core.auth import require_role
 from api.models import (
     LearnerProfileRequest, PipelineStatusEvent

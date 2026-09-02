@@ -6,7 +6,9 @@ import sys
 
 # Hack to allow absolute imports from parent directory
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import config
+from config.settings import get_settings
+
+settings = get_settings()
 
 # Initialize models and DB lazily
 _model = None
@@ -16,15 +18,15 @@ _collection = None
 def get_embedding_model():
     global _model
     if _model is None:
-        _model = SentenceTransformer(config.EMBEDDING_MODEL_NAME)
+        _model = SentenceTransformer(settings.embedding_model_name)
     return _model
 
 def get_chroma_collection():
     global _client, _collection
     if _client is None:
-        _client = chromadb.PersistentClient(path=config.CHROMA_DB_DIR)
+        _client = chromadb.PersistentClient(path=settings.chroma_db_path)
         _collection = _client.get_or_create_collection(
-            name=config.COLLECTION_NAME, # Should be updated in config to 'courses'
+            name=settings.collection_name, # Should be updated in config to 'courses'
             metadata={"hnsw:space": "cosine"}
         )
     return _collection

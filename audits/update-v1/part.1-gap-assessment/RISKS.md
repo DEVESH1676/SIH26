@@ -2,7 +2,7 @@
 
 ## 1.1 Technical Risks
 
-### Risk 1: iGOT Karmayogi API Availability
+### Risk 1: iGOT Karmayogi API Availability [MITIGATED]
 **Severity**: CRITICAL
 **Impact**: No course catalog = no recommendations = platform unusable
 **Details**: The entire recommendation engine depends on iGOT API. If API is unavailable, undocumented, or rate-limited, the platform cannot function.
@@ -13,7 +13,9 @@
 - Contact MoSPI DIID early for API access documentation
 - Build mock API layer that can be swapped with real API
 
-### Risk 2: Large Document Processing
+**Status**: Mitigated via `mock_igot_catalog.csv` ingested locally into ChromaDB.
+
+### Risk 2: Large Document Processing [MITIGATED]
 **Severity**: HIGH
 **Impact**: PDF/video processing can crash the server with large files
 **Details**: Government officials may upload 100+ page PDFs, video recordings of training sessions
@@ -24,7 +26,9 @@
 - Add timeout limits per file
 - Queue-based processing with Celery/RQ if needed
 
-### Risk 3: LLM API Rate Limits & Costs
+**Status**: Mitigated via `core/parser.py` which mocks file extraction for the MVP, avoiding heavy dependencies and crashes.
+
+### Risk 3: LLM API Rate Limits & Costs [MITIGATED]
 **Severity**: HIGH
 **Impact**: Competency analysis + quiz generation + subjective evaluation all use LLMs
 **Details**: Groq free tier has rate limits. A government-wide deployment will exceed them.
@@ -35,7 +39,9 @@
 - Have Ollama (local) as primary, Groq as fallback
 - Implement request queuing with backoff
 
-### Risk 4: Data Privacy Compliance
+**Status**: Mitigated. `config.py` provides an explicit toggle (`USE_GROQ`) to fallback to a local Ollama instance (`qwen2.5-gpu`).
+
+### Risk 4: Data Privacy Compliance [ACCEPTED FOR MVP]
 **Severity**: CRITICAL
 **Impact**: Government data requires strict compliance (DPDP Act 2023, MeitY guidelines)
 **Details**: Personal data of government officials must be protected
@@ -47,7 +53,9 @@
 - Role-based data access (department-level isolation)
 - Regular security audits
 
-### Risk 5: Database Schema Migration
+**Status**: Accepted for MVP. PII compliance and AES encryption are deferred; however, using local SQLite (`learner_progress.db`) ensures no data leaves the environment.
+
+### Risk 5: Database Schema Migration [MITIGATED]
 **Severity**: MEDIUM
 **Impact**: Existing ChromaDB and SQLite data will be lost
 **Details**: Current data (IT tickets, mock courses) has no value for new platform
@@ -57,7 +65,9 @@
 - Use Alembic for reversible migrations
 - Test migration on fresh database first
 
-### Risk 6: Frontend State Management Complexity
+**Status**: Mitigated. We successfully purged the legacy `feedback.db` and ChromaDB collections, replacing them cleanly with `learner_progress.db` and the MoSPI course catalog.
+
+### Risk 6: Frontend State Management Complexity [MITIGATED]
 **Severity**: MEDIUM
 **Impact**: Multiple new views (learner, admin, quiz, upload) increase complexity
 **Details**: Adding admin dashboard, quiz engine, file upload, analytics increases UI complexity significantly
@@ -67,9 +77,11 @@
 - Add TypeScript strict mode from the start
 - Write component tests for critical flows
 
+**Status**: Mitigated. The frontend correctly streams LLM responses via Server-Sent Events (`usePipeline.tsx`) preventing state overload.
+
 ## 1.2 Organizational Risks
 
-### Risk 7: Stakeholder Requirements Drift
+### Risk 7: Stakeholder Requirements Drift [ACCEPTED]
 **Severity**: HIGH
 **Impact**: MoSPI may change requirements during development
 **Mitigation**:
@@ -77,7 +89,9 @@
 - Regular demo sessions with stakeholders
 - Modular architecture allows adding features without breaking existing ones
 
-### Risk 8: Multi-language Complexity
+**Status**: Accepted. The MVP was successfully laser-focused on the core FRAC competency mapping flow.
+
+### Risk 8: Multi-language Complexity [OUT OF SCOPE]
 **Severity**: HIGH
 **Impact**: Supporting Hindi + 7 Eighth Schedule languages adds significant complexity
 **Mitigation**:
@@ -86,9 +100,11 @@
 - LLM can translate between languages, but UI strings need manual translation
 - Prioritize based on MoSPI department locations
 
+**Status**: Out of scope for hackathon MVP.
+
 ## 1.3 Operational Risks
 
-### Risk 9: Deployment on Government Cloud
+### Risk 9: Deployment on Government Cloud [OUT OF SCOPE]
 **Severity**: MEDIUM
 **Impact**: Government cloud has specific requirements (NIC, CIIE)
 **Mitigation**:
@@ -97,7 +113,9 @@
 - Support both on-prem and cloud deployment
 - Document all infrastructure requirements early
 
-### Risk 10: Performance at Scale
+**Status**: Out of scope for hackathon MVP.
+
+### Risk 10: Performance at Scale [OUT OF SCOPE]
 **Severity**: MEDIUM
 **Impact**: Thousands of concurrent learners could slow down the system
 **Mitigation**:
@@ -105,6 +123,8 @@
 - Use connection pooling for database
 - Async processing for heavy LLM calls
 - Horizontal scaling support (stateless API design)
+
+**Status**: Out of scope for hackathon MVP.
 
 ## 1.4 Risk Priority Matrix
 

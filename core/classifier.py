@@ -1,7 +1,7 @@
 """
-Competency Analyzer — Skill Gap Analysis Engine
-Analyzes a user's profile to identify current competencies and missing skill gaps
-against the MoSPI competency framework.
+Competency Analyzer — Skill Gap Analysis Engine for MoSPI Officials.
+Analyzes official profiles to identify current competencies and
+missing skill gaps against the MoSPI competency framework.
 """
 import os
 import sys
@@ -9,103 +9,172 @@ import json
 import requests
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import config
+from config.settings import get_settings
+from core.competency_framework import (
+    COMPETENCY_FRAMEWORK,
+    get_all_competency_ids,
+    search_competencies,
+)
+
+settings = get_settings()
 
 
 class CompetencyAnalyzer:
-    """Analyzes user profiles to identify skill gaps."""
+    """Analyzes user profiles to identify skill gaps against MoSPI framework."""
 
     def __init__(self):
-        # We can integrate ChromaDB later if we want to match against a DB of competencies
-        pass
+        self.all_competency_ids = get_all_competency_ids()
 
     def _call_llm(self, prompt: str) -> dict | None:
-        """Call LLM (Groq/Ollama) to perform the competency extraction."""
+        """Call LLM (Groq/Ollama) for competency analysis."""
         try:
-            if config.USE_GROQ and config.GROQ_API_KEY:
+            if settings.use_groq and settings.groq_api_key:
                 resp = requests.post(
                     "https://api.groq.com/openai/v1/chat/completions",
                     headers={
-                        "Authorization": f"Bearer {config.GROQ_API_KEY}",
+                        "Authorization": f"Bearer {settings.groq_api_key}",
                         "Content-Type": "application/json",
                     },
                     json={
-                        "model": config.GROQ_MODEL,
+                        "model": settings.groq_model,
                         "messages": [{"role": "user", "content": prompt}],
                         "temperature": 0.1,
-                        "max_tokens": 500,
+                        "max_tokens": 1500,
                     },
-                    timeout=15,
+                    timeout=30,
                 )
                 resp.raise_for_status()
                 content = resp.json()["choices"][0]["message"]["content"].strip()
             else:
                 resp = requests.post(
-                    f"{config.OLLAMA_BASE_URL}/api/generate",
+                    f"{settings.ollama_base_url}/api/generate",
                     json={
-                        "model": config.OLLAMA_MODEL,
+                        "model": settings.ollama_model,
                         "prompt": prompt,
                         "stream": False,
                         "format": "json",
                     },
-                    timeout=10,
+                    timeout=30,
                 )
                 resp.raise_for_status()
                 content = resp.json()["response"].strip()
-                
-            # Strip markdown fences if present
+
+            # Strip markdown fences
             if content.startswith("```"):
                 content = content.split("\n", 1)[1].rsplit("```", 1)[0].strip()
             return json.loads(content)
-            
+
         except Exception as e:
             print(f"  ⚠ LLM analysis failed: {e}")
             return None
 
-    def analyze_profile(self, designation: str, profile_text: str) -> dict:
+    def analyze_profile(
+        self,
+        designation: str,
+        profile_text: str,
+        department: str = "",
+        education: str = "",
+        experience_years: int = 0,
+        previous_trainings: list[str] = None,
+    ) -> dict:
         """
-        Analyze the official's profile and return their current skills and identified gaps.
+        Analyze official's profile against MoSPI competency framework.
+        
+        Args:
+            designation: Official's current designation
+            profile_text: Summary of experience and duties
+            department: Department/organization
+            education: Educational qualifications
+            experience_years: Years of experience
+            previous_trainings: List of completed training titles
         """
-        prompt = f"""You are an HR Capacity Building AI for the Ministry of Statistics (MoSPI).
-Analyze this official's profile against the FRAC (Framework for Roles, Activities, and Competencies) model.
-Identify their current competencies and explicitly list their missing 'Skill Gaps' based on standard requirements for their designation.
+        previous_trainings = previous_trainings or []
+        
+        # Get domain-specific competency lists for the prompt
+        stat_comps = list(COMPETENCY_FRAMEWORK["statistical"].keys())
+        tech_comps = list(COMPETENCY_FRAMEWORK["technical"].keys())
+        dg_comps = list(COMPETENCY_FRAMEWORK["digital_governance"].keys())
+        beh_comps = list(COMPETENCY_FRAMEWORK["behavioural"].keys())
 
-Designation: {designation}
-Profile/Experience: {profile_text}
+        prompt = f"""You are an HR Capacity Building AI for the Ministry of Statistics and Programme Implementation (MoSPI), India.
 
-Domains to map:
-1. Domain (Statistical Competencies)
-2. Functional (Functional & Digital Competencies)
-3. Behavioral (Behavioral Competencies)
+Analyze this official's profile against the MoSPI Competency Framework for the Official Statistical System.
 
-Reply ONLY with valid JSON (no markdown) in the following format:
+## Official Profile
+- **Designation**: {designation}
+- **Department**: {department or "Not specified"}
+- **Education**: {education or "Not specified"}
+- **Experience**: {experience_years} years
+- **Previous Trainings**: {', '.join(previous_trainings) if previous_trainings else 'None recorded'}
+- **Profile/Experience**: {profile_text}
+
+## Competency Framework Domains
+
+### Statistical Competencies
+{', '.join(stat_comps)}
+
+### Technical Competencies
+{', '.join(tech_comps)}
+
+### Digital Governance Competencies
+{', '.join(dg_comps)}
+
+### Behavioural Competencies
+{', '.join(beh_comps)}
+
+## Instructions
+1. Assess the official's CURRENT competency level for each relevant domain.
+2. Identify SPECIFIC skill gaps based on standard requirements for their designation.
+3. Consider their experience level, education, and previous trainings.
+4. Weight competencies based on relevance to their role.
+
+Reply ONLY with valid JSON (no markdown fences):
 {{
-  "current_skills": {{"Domain": [], "Functional": [], "Behavioral": []}},
-  "skill_gaps": {{"Domain": [], "Functional": [], "Behavioral": []}},
-  "analysis_summary": "A 2-sentence summary of their competency profile."
+  "current_skills": [
+    {{"id": "STAT-001", "name": "Survey Design", "level": "beginner|intermediate|advanced"}}
+  ],
+  "skill_gaps": [
+    {{"id": "TECH-001", "name": "Python for Data Analysis", "priority": "high|medium|low", "reason": "Required for data processing in current role"}}
+  ],
+  "competency_summary": {{
+    "statistical": "beginner|intermediate|advanced",
+    "technical": "beginner|intermediate|advanced",
+    "digital_governance": "beginner|intermediate|advanced",
+    "behavioural": "beginner|intermediate|advanced"
+  }},
+  "analysis_summary": "2-sentence summary of their competency profile and key development needs."
 }}
 """
         result = self._call_llm(prompt)
-        
+
         if not result:
-            # Fallback
+            # Conservative fallback
             return {
-                "current_skills": {"Domain": ["General Administration"], "Functional": [], "Behavioral": []},
-                "skill_gaps": {"Domain": ["Data Analysis"], "Functional": ["Digital Governance"], "Behavioral": []},
-                "analysis_summary": "Could not perform deep analysis. Assuming default gaps for capacity building."
+                "current_skills": [],
+                "skill_gaps": [],
+                "competency_summary": {
+                    "statistical": "beginner",
+                    "technical": "beginner",
+                    "digital_governance": "beginner",
+                    "behavioural": "beginner",
+                },
+                "analysis_summary": "Could not perform deep analysis. Recommend manual competency assessment.",
             }
-            
+
         return result
 
 
-# --- CLI Test ---
+# ── CLI Test ────────────────────────────────────────────────
 if __name__ == "__main__":
-    print("Initializing Competency Analyzer...")
+    print("Initializing Competency Analyzer for MoSPI...")
     analyzer = CompetencyAnalyzer()
-    
-    print("\nTesting with Sample Profile...")
-    sample_designation = "Statistical Officer"
-    sample_profile = "Worked on field data collection for 5 years. Proficient in MS Excel and basic data entry. No experience with modern data pipelines or Python."
-    
-    result = analyzer.analyze_profile(sample_designation, sample_profile)
+
+    result = analyzer.analyze_profile(
+        designation="Statistical Officer",
+        profile_text="Worked on field data collection for NSSO surveys for 5 years. Proficient in MS Excel and basic data entry. No experience with Python, SQL, or modern data analysis tools.",
+        department="NSO",
+        education="M.A. Statistics",
+        experience_years=5,
+        previous_trainings=["Basic Computer Training"],
+    )
     print(json.dumps(result, indent=2))
