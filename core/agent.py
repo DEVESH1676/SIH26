@@ -65,15 +65,24 @@ class PathwayAgent:
     def __init__(self):
         self.recommender = CourseRecommender()
 
-    def run(self, skill_gaps: list) -> dict:
+    def run(self, skill_gaps: dict) -> dict:
         """Generate learning pathway."""
-        if not skill_gaps:
+        # Flatten the skill_gaps dictionary into a list
+        flat_gaps = []
+        if isinstance(skill_gaps, dict):
+            for category, skills in skill_gaps.items():
+                if isinstance(skills, list):
+                    flat_gaps.extend(skills)
+        elif isinstance(skill_gaps, list):
+            flat_gaps = skill_gaps
+            
+        if not flat_gaps:
             return {
                 "pathway": "No skill gaps identified. Keep up the good work!",
                 "courses": []
             }
             
-        result = self.recommender.suggest_courses(skill_gaps)
+        result = self.recommender.suggest_courses(flat_gaps)
         
         return {
             "pathway": result.get("suggested_pathway", ""),

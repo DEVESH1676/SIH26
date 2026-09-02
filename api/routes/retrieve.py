@@ -1,32 +1,26 @@
 """
-Nexus AI — Standalone RAG Retrieval Endpoint
-POST /api/retrieve — Runs multi-hop semantic retrieval and returns RAGResult.
+MoSPI AI Learning Platform — Course Recommendation Endpoint
+POST /api/recommend-pathway — Queries course catalog and generates a personalized learning pathway.
 """
 import asyncio
-
 from fastapi import APIRouter, Depends
 
-from core.rag import ResolutionEngine
-from api.models import TicketRequest, RAGResult
-from api.deps import get_rag_engine
+from core.rag import CourseRecommender
+from api.models import PathwayRequest, PathwayResponse
+from api.deps import get_recommender
 
-router = APIRouter(prefix="/api", tags=["modular"])
+router = APIRouter(prefix="/api", tags=["pathway"])
 
 
-@router.post("/retrieve", response_model=RAGResult)
-async def retrieve_context(
-    ticket: TicketRequest,
-    rag_engine: ResolutionEngine = Depends(get_rag_engine),
-) -> RAGResult:
+@router.post("/recommend-pathway", response_model=PathwayResponse)
+async def recommend_pathway(
+    req: PathwayRequest,
+    recommender: CourseRecommender = Depends(get_recommender),
+) -> PathwayResponse:
     """
-    Standalone RAG retrieval endpoint.
-    Performs multi-hop semantic retrieval and returns ranked evidence
-    with an LLM-generated resolution suggestion.
-
-    Uses asyncio.to_thread() because rag_engine.suggest_resolution()
-    makes blocking HTTP calls to Groq/Ollama.
+    Recommend iGOT courses and build a custom learning pathway based on skill gaps.
     """
     result = await asyncio.to_thread(
-        rag_engine.suggest_resolution, ticket.title, ticket.description
+        recommender.suggest_courses, req.skill_gaps
     )
-    return RAGResult(**result)
+    return PathwayResponse(**result)

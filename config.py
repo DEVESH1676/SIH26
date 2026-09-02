@@ -6,7 +6,7 @@ load_dotenv()
 
 # --- Model Selection ---
 # Set to True to use Groq API (needs GROQ_API_KEY in .env), False to use local Ollama
-USE_GROQ = True
+USE_GROQ = os.getenv("USE_GROQ", "True").lower() == "true"
 
 # --- LLM Configurations ---
 # Groq specific
@@ -30,33 +30,44 @@ OLLAMA_BASE_URL = "http://192.168.137.1:11434"
 # --- Embedding Configurations ---
 EMBEDDING_MODEL_NAME = 'all-MiniLM-L6-v2'
 CHROMA_DB_DIR = "./chroma_db"
-COLLECTION_NAME = "tickets"
+COLLECTION_NAME = "courses"
 
-# --- Agentic Layer Thresholds ---
-CONFIDENCE_THRESHOLD = 0.75          # Above this → fast centroid path (no LLM)
-MEDIUM_CONFIDENCE_THRESHOLD = 0.40   # Below this → direct escalation (no LLM)
-                                     # Between 0.40–0.75 → LLM judge re-classifies
-NOVELTY_SIMILARITY_THRESHOLD = 0.20  # If best-match similarity < this → NOVEL_TICKET
-REPEAT_THRESHOLD = 3        # Number of similar tickets to trigger automation suggestion
-REPEAT_WINDOW_DAYS = 7      # Time window for repeat detection
-SIMILARITY_THRESHOLD = 0.85 # Cosine similarity score to consider tickets "similar"
+# --- LMS Agentic Layer Thresholds ---
+CONFIDENCE_THRESHOLD = 0.75          # Above this → high confidence skill gap match
+MEDIUM_CONFIDENCE_THRESHOLD = 0.40   # Below this → manual assessment required
+                                     # Between 0.40–0.75 → LLM re-evaluates
+NOVELTY_SIMILARITY_THRESHOLD = 0.20  # If best-match similarity < this → NOVEL_SKILL
+REPEAT_THRESHOLD = 3        # Number of failed quiz attempts to trigger mentor suggestion
+REPEAT_WINDOW_DAYS = 7      # Time window for attempt detection
+SIMILARITY_THRESHOLD = 0.85 # Cosine similarity score to consider courses "similar"
 
-# --- Categories & Routing ---
+# --- MoSPI FRAC Competency Domains ---
 CATEGORIES = [
-    "Infrastructure", 
-    "Application", 
-    "Security",
-    "Database", 
-    "Network", 
-    "Access Management"
+    "Statistical Competencies", 
+    "Functional & Digital Competencies", 
+    "Behavioral Competencies"
 ]
 
 ROUTING = {
-    "Infrastructure": "Cloud Platform Engineering",
-    "Application": "Application Support Team",
-    "Security": "Security Operations Center (SOC)",
-    "Database": "Database Administration (DBA)",
-    "Network": "Network Operations Center (NOC)",
-    "Access Management": "Identity & Access Management (IAM)",
-    "Unknown": "General Support L1"
+    "Statistical Competencies": "NSSTA Advanced Training",
+    "Functional & Digital Competencies": "iGOT Karmayogi Online Platform",
+    "Behavioral Competencies": "iGOT Karmayogi Ethics Modules",
 }
+
+# --- iGOT Karmayogi API Configurations ---
+IGOT_API_BASE_URL = os.getenv("IGOT_API_BASE_URL", "https://karmayogi.nic.in/api")
+IGOT_API_KEY = os.getenv("IGOT_API_KEY", "")
+
+# --- Compliance & Settings (SSIP/MeitY) ---
+DATA_LOCALITY_STRICT = os.getenv("DATA_LOCALITY_STRICT", "True").lower() == "true"
+LOG_RETENTION_DAYS = int(os.getenv("LOG_RETENTION_DAYS", "90"))
+
+# --- Multi-Language Settings ---
+SUPPORTED_LANGUAGES = ["en", "hi", "bn", "te", "mr", "ta", "ur", "gu"]
+DEFAULT_LANGUAGE = "en"
+
+# --- File Processing & Upload Limits ---
+MAX_UPLOAD_SIZE_MB = int(os.getenv("MAX_UPLOAD_SIZE_MB", "50"))
+SUPPORTED_FILE_FORMATS = [".pdf", ".docx", ".pptx", ".mp4", ".mp3"]
+CHUNK_SIZE_TEXT = int(os.getenv("CHUNK_SIZE_TEXT", "2000"))
+CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "200"))

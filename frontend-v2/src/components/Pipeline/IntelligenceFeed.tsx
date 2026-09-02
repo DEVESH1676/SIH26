@@ -4,11 +4,10 @@ import StageCard from './StageCard';
 import type { PipelineStage } from '../../types/pipeline';
 
 const STAGES: { id: PipelineStage; title: string }[] = [
-  { id: 'classification', title: 'Neural Classification' },
-  { id: 'triage', title: 'Priority Triage' },
-  { id: 'rag', title: 'Contextual Retrieval' },
-  { id: 'resolution', title: 'Resolution Synthesis' },
-  { id: 'judge', title: 'Safety Verification' },
+  { id: 'profiling', title: 'Competency Analysis' },
+  { id: 'identifying_gaps', title: 'Skill Gap Identification' },
+  { id: 'matching_courses', title: 'iGOT Course Matching' },
+  { id: 'pathway_built', title: 'Learning Pathway Construction' },
 ];
 
 const IntelligenceFeed: React.FC = () => {
@@ -29,11 +28,10 @@ const IntelligenceFeed: React.FC = () => {
 
   const getResult = (stageId: PipelineStage) => {
     switch (stageId) {
-      case 'classification': return state.results.classification;
-      case 'triage': return state.results.triage;
-      case 'rag': return state.results.rag;
-      case 'resolution': return state.results.resolution;
-      case 'judge': return state.results.judge;
+      case 'profiling':
+      case 'identifying_gaps': return state.results.profile;
+      case 'matching_courses':
+      case 'pathway_built': return state.results.pathway;
       default: return undefined;
     }
   };

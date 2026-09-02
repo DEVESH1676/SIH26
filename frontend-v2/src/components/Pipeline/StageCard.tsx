@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, Circle, Clock, AlertCircle, Search, Cpu, Zap, ShieldCheck, FileText, ExternalLink, ShieldAlert } from 'lucide-react';
+import { CheckCircle2, Circle, Clock, AlertCircle, Search, User, BookOpen, Target, GraduationCap } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Badge } from '../ui/badge';
 import NeuralParticles from '../Visuals/NeuralParticles';
@@ -17,11 +17,10 @@ interface StageCardProps {
 const StageCard: React.FC<StageCardProps> = ({ stage, title, status, result, index }) => {
   const getIcon = () => {
     switch (stage) {
-      case 'classification': return <Zap className="w-5 h-5" />;
-      case 'triage': return <Cpu className="w-5 h-5" />;
-      case 'rag': return <Search className="w-5 h-5" />;
-      case 'resolution': return <FileText className="w-5 h-5" />;
-      case 'judge': return <ShieldCheck className="w-5 h-5" />;
+      case 'profiling': return <User className="w-5 h-5" />;
+      case 'identifying_gaps': return <Target className="w-5 h-5" />;
+      case 'matching_courses': return <Search className="w-5 h-5" />;
+      case 'pathway_built': return <GraduationCap className="w-5 h-5" />;
       default: return <Clock className="w-5 h-5" />;
     }
   };
@@ -35,125 +34,29 @@ const StageCard: React.FC<StageCardProps> = ({ stage, title, status, result, ind
     }
   };
 
-  const renderClassification = (data: any) => (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-black">Identified Category</span>
-        <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider">
-          {data.category || 'Unknown'}
-        </Badge>
-      </div>
-      <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-        <motion.div 
-          initial={{ width: 0 }}
-          animate={{ width: `${(data.confidence || 0) * 100}%` }}
-          className="h-full bg-gradient-to-r from-cyan-500 to-blue-500"
-        />
-      </div>
-      <div className="flex justify-between text-[10px] font-bold uppercase text-zinc-400">
-        <span>Confidence</span>
-        <span className="text-cyan-400">{Math.round((data.confidence || 0) * 100)}%</span>
-      </div>
-    </div>
-  );
-
-  const renderTriage = (data: any) => {
-    const isEscalate = data.escalate || data.decision?.includes('ESCALATE');
+  const renderProfiling = (data: any) => {
+    const skillsDict = data.current_skills || {};
+    const totalSkills = Object.values(skillsDict).reduce((acc: number, list: any) => acc + (list?.length || 0), 0);
+    
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-black">Routing Decision</span>
-          <Badge className={cn(
-            "px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider",
-            isEscalate ? "bg-red-500/10 text-red-400 border-red-500/20" : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-          )}>
-            {data.decision || 'Routed'}
+          <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-black">Identified Skills</span>
+          <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider">
+            {totalSkills} Skills Found
           </Badge>
         </div>
-        <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4">
-          <p className="text-[11px] text-zinc-300 leading-relaxed font-medium">
-            {data.rationale || 'No triage rationale provided.'}
-          </p>
-        </div>
-      </div>
-    );
-  };
-
-  const renderRAG = (data: any) => (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-black">Knowledge Retrieval</span>
-        <span className="text-[10px] font-black text-cyan-400 bg-cyan-400/10 px-2 py-0.5 rounded uppercase">
-          {data.similar_ticket_ids?.length || 0} Sources Found
-        </span>
-      </div>
-      <div className="bg-black/40 border border-white/5 rounded-xl p-4 relative overflow-hidden group">
-        <div className="absolute top-0 right-0 p-2 opacity-30 group-hover:opacity-100 transition-opacity">
-          <ExternalLink className="w-3 h-3 text-zinc-400" />
-        </div>
-        <p className="text-[11px] text-zinc-400 italic leading-relaxed line-clamp-3">
-          "{data.context_used || 'No specific context retrieved.'}"
-        </p>
-      </div>
-    </div>
-  );
-
-  const renderResolution = (data: any) => (
-    <div className="space-y-4">
-      <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-black">Execution Blueprint</span>
-      <div className="space-y-2">
-        {(data.resolution_steps || []).map((step: string, i: number) => (
-          <motion.div 
-            key={i}
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: i * 0.1 }}
-            className="flex gap-3 items-start group"
-          >
-            <span className="text-[10px] font-black text-zinc-600 mt-1">{String(i + 1).padStart(2, '0')}</span>
-            <p className="text-[11px] text-zinc-300 font-medium group-hover:text-cyan-300 transition-colors">
-              {step}
-            </p>
-          </motion.div>
-        ))}
-        {(!data.resolution_steps || data.resolution_steps.length === 0) && (
-          <p className="text-[11px] text-zinc-500 italic">Compiling resolution steps...</p>
-        )}
-      </div>
-    </div>
-  );
-
-  const renderJudge = (data: any) => {
-    const isPass = data.safety_gate === 'PASS';
-    const rubrics = [
-      { criteria: 'Correctness', score: data.correctness || 0 },
-      { criteria: 'Completeness', score: data.completeness || 0 },
-      { criteria: 'Safety', score: data.safety || 0 },
-      { criteria: 'Clarity', score: data.clarity || 0 }
-    ];
-    return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-black">Safety Compliance</span>
-          <div className="flex items-center gap-2">
-            {isPass ? (
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            ) : (
-              <ShieldAlert className="w-4 h-4 text-red-400" />
-            )}
-            <span className={cn(
-              "text-[11px] font-black uppercase tracking-wider",
-              isPass ? "text-emerald-400" : "text-red-400"
-            )}>
-              {data.safety_gate || 'Pending'}
-            </span>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          {rubrics.map((item, i) => (
-            <div key={i} className="bg-white/5 rounded-lg p-2 border border-white/5">
-              <div className="text-[9px] text-zinc-500 uppercase font-bold mb-1">{item.criteria}</div>
-              <div className="text-[11px] text-zinc-200 font-black">{item.score}/5</div>
+        <div className="space-y-3">
+          {Object.entries(skillsDict).map(([domain, skills]: [string, any], idx: number) => (
+            <div key={idx}>
+              <span className="text-[9px] text-cyan-400/80 font-black uppercase tracking-widest block mb-1">{domain}</span>
+              <div className="flex flex-wrap gap-2">
+                {(skills || []).map((skill: string, i: number) => (
+                  <span key={i} className="text-[10px] bg-white/5 border border-white/10 px-2 py-1 rounded text-zinc-300">
+                    {skill}
+                  </span>
+                ))}
+              </div>
             </div>
           ))}
         </div>
@@ -161,21 +64,94 @@ const StageCard: React.FC<StageCardProps> = ({ stage, title, status, result, ind
     );
   };
 
+  const renderIdentifyingGaps = (data: any) => {
+    const gapsDict = data.skill_gaps || {};
+    const totalGaps = Object.values(gapsDict).reduce((acc: number, list: any) => acc + (list?.length || 0), 0);
+
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-black">Skill Gaps</span>
+          <Badge className="bg-orange-500/10 text-orange-400 border-orange-500/20 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider">
+            {totalGaps} Gaps Detected
+          </Badge>
+        </div>
+        <div className="space-y-3">
+          {Object.entries(gapsDict).map(([domain, gaps]: [string, any], idx: number) => (
+            <div key={idx}>
+              <span className="text-[9px] text-orange-400/80 font-black uppercase tracking-widest block mb-1">{domain}</span>
+              <div className="flex flex-wrap gap-2">
+                {(gaps || []).map((gap: string, i: number) => (
+                  <span key={i} className="text-[10px] bg-orange-500/5 border border-orange-500/20 px-2 py-1 rounded text-orange-300">
+                    {gap}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4 mt-2">
+          <p className="text-[11px] text-zinc-300 leading-relaxed font-medium">
+            {data.analysis_summary || 'Analyzing profile data...'}
+          </p>
+        </div>
+      </div>
+    );
+  };
+
+  const renderMatchingCourses = (data: any) => (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-black">iGOT Course Catalog</span>
+        <span className="text-[10px] font-black text-cyan-400 bg-cyan-400/10 px-2 py-0.5 rounded uppercase">
+          {data.courses?.length || 0} Matches Found
+        </span>
+      </div>
+      <div className="space-y-3">
+        {(data.courses || []).slice(0, 3).map((course: any, i: number) => (
+          <div key={i} className="bg-black/40 border border-white/5 rounded-xl p-3 relative group">
+            <h4 className="text-[12px] font-bold text-white mb-1">{course.course_name}</h4>
+            <div className="flex gap-2 text-[9px] uppercase font-bold tracking-wider mb-2">
+              <span className="text-zinc-500">{course.domain}</span>
+              <span className="text-cyan-600">•</span>
+              <span className="text-cyan-500">{course.course_id}</span>
+            </div>
+            <p className="text-[10px] text-zinc-400 line-clamp-2">
+              {course.description}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderPathwayBuilt = (data: any) => (
+    <div className="space-y-4">
+      <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-black">Suggested Learning Pathway</span>
+      <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-4">
+        <p className="text-[12px] text-blue-200 leading-relaxed">
+          {data.suggested_pathway || 'Building pathway...'}
+        </p>
+      </div>
+      
+      <div className="pt-2">
+        <button className="w-full py-3 bg-white/10 hover:bg-white/20 border border-white/10 rounded-lg text-[11px] font-black uppercase tracking-widest text-white transition-all flex items-center justify-center gap-2">
+          <BookOpen className="w-4 h-4" />
+          Generate Assessment Quiz
+        </button>
+      </div>
+    </div>
+  );
+
+
   const renderContent = () => {
     if (!result) return null;
-    if (typeof result === 'string') {
-      return (
-        <div className="rounded-xl p-5 border border-white/5 relative z-40">
-          <p className="text-[11px] font-mono text-zinc-400 whitespace-pre-wrap leading-relaxed">{result}</p>
-        </div>
-      );
-    }
+    
     switch (stage) {
-      case 'classification': return renderClassification(result);
-      case 'triage': return renderTriage(result);
-      case 'rag': return renderRAG(result);
-      case 'resolution': return renderResolution(result);
-      case 'judge': return renderJudge(result);
+      case 'profiling': return renderProfiling(result);
+      case 'identifying_gaps': return renderIdentifyingGaps(result);
+      case 'matching_courses': return renderMatchingCourses(result);
+      case 'pathway_built': return renderPathwayBuilt(result);
       default: return (
         <div className="rounded-xl p-5 border border-white/5 relative z-40">
           <pre className="text-[11px] font-mono text-zinc-400 overflow-x-auto">
@@ -234,7 +210,7 @@ const StageCard: React.FC<StageCardProps> = ({ stage, title, status, result, ind
             </h3>
             {status === 'running' && (
               <p className="text-[9px] uppercase tracking-[0.3em] text-blue-400 mt-1.5 font-black animate-pulse">
-                Neural Synthesis Active
+                AI Analysis Active
               </p>
             )}
           </div>

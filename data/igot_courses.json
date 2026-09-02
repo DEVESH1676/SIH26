@@ -1,0 +1,52 @@
+[
+  {
+    "id": "IGOT-STAT-101",
+    "title": "Introduction to National Accounts",
+    "provider": "iGOT Karmayogi",
+    "domain": "Domain",
+    "skills": ["STAT-001"],
+    "level": "Beginner",
+    "duration_hours": 4.5,
+    "format": "Asynchronous Video"
+  },
+  {
+    "id": "IGOT-STAT-202",
+    "title": "Advanced Index Numbers Methodology",
+    "provider": "iGOT Karmayogi",
+    "domain": "Domain",
+    "skills": ["STAT-002"],
+    "level": "Advanced",
+    "duration_hours": 6.0,
+    "format": "Interactive Module"
+  },
+  {
+    "id": "IGOT-FUNC-101",
+    "title": "DPDP Act 2023 for Government Officials",
+    "provider": "iGOT Karmayogi",
+    "domain": "Functional",
+    "skills": ["FUNC-001"],
+    "level": "Beginner",
+    "duration_hours": 2.0,
+    "format": "Asynchronous Video"
+  },
+  {
+    "id": "IGOT-FUNC-201",
+    "title": "Data Analysis with Python (Govt Dataset Edition)",
+    "provider": "iGOT Karmayogi",
+    "domain": "Functional",
+    "skills": ["FUNC-002"],
+    "level": "Intermediate",
+    "duration_hours": 10.0,
+    "format": "Hands-on Lab"
+  },
+  {
+    "id": "IGOT-BEH-101",
+    "title": "Ethics in Public Service",
+    "provider": "iGOT Karmayogi",
+    "domain": "Behavioral",
+    "skills": ["BEH-001"],
+    "level": "Foundation",
+    "duration_hours": 3.0,
+    "format": "Asynchronous Video"
+  }
+]

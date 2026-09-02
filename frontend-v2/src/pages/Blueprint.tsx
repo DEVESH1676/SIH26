@@ -3,31 +3,47 @@ import MermaidCanvas from '../components/Architecture/Mermaid';
 import TermInspector, { type Term } from '../components/Architecture/TermInspector';
 import { Cpu } from 'lucide-react';
 
-interface BlueprintData {
-  execution_flow: string;
-  dictionary: Term[];
-  dependencies: { from: string; to: string; type: string }[];
-}
+const LMS_GRAPH = `
+%%{init: {'flowchart': {'curve': 'basis', 'theme': 'dark'}}}%%
+graph TD
+    UI[Frontend: operations.tsx] -->|POST /api/pipeline/stream| Pipeline[Pipeline Controller]
+    
+    subgraph Core AI Layer
+        Pipeline --> PA[ProfileAgent: analyze_profile]
+        PA --> Ext[FRAC Competency Extractor]
+        Ext --> Gaps[Skill Gap Identifier]
+        
+        Gaps --> Path[PathwayAgent: suggest_courses]
+        Path --> RAG[RAG Engine: chroma_db]
+        
+        RAG --> iGOT[iGOT Catalog Matcher]
+    end
+    
+    iGOT -->|SSE Stream| UI
+    
+    subgraph Assessment Engine
+        Doc[Uploaded Doc] --> Parser[MediaParser]
+        Parser --> QA[AssessmentAgent: QuizGenerator]
+        QA -->|POST /api/assessment| UI
+    end
+`;
+
+const LMS_DICTIONARY: Term[] = [
+  { term: "ProfileAgent", description: "LLM agent that maps official duties to the tripartite FRAC competency model.", storage: "In-Memory", nodeId: "PA" },
+  { term: "PathwayAgent", description: "Recommends learning interventions by matching skill gaps against iGOT courses.", storage: "In-Memory", nodeId: "Path" },
+  { term: "AssessmentAgent", description: "Generates multiple-choice quizzes and subjective evaluations from learning material.", storage: "SQLite", nodeId: "QA" },
+  { term: "ChromaDB", description: "Local vector database storing embedding vectors for semantic search over course catalog.", storage: "Disk", nodeId: "ChromaDB" },
+  { term: "MediaParser", description: "Data ingestion engine capable of parsing PDF, DOCX, PPTX, and multimedia.", storage: "Disk", nodeId: "Parser" }
+];
 
 const Blueprint: React.FC = () => {
-  const [data, setData] = useState<BlueprintData | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchBlueprint = async () => {
-      try {
-        const res = await fetch('/api/blueprint');
-        if (!res.ok) throw new Error('Failed to fetch blueprint data');
-        const json = await res.json();
-        setData(json);
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchBlueprint();
+    // Simulate loading for effect
+    setTimeout(() => {
+      setLoading(false);
+    }, 800);
   }, []);
 
   const handleSearch = (nodeId: string | null) => {
@@ -89,20 +105,15 @@ const Blueprint: React.FC = () => {
     );
   }
 
-  if (error || !data) {
-    return (
-      <div className="min-h-[70vh] flex items-center justify-center">
-        <div className="text-red-400 font-mono text-sm border border-red-500/20 bg-red-500/10 p-4 rounded-xl">
-          ERROR: {error || 'Failed to load blueprint'}
-        </div>
-      </div>
-    );
-  }
-
-  // Generate a simple mermaid string for dependencies if not provided by backend as mermaid
-  const depGraph = data.dependencies 
-    ? "%%{init: {'flowchart': {'curve': 'basis'}}}%%\ngraph TD\n  Pipeline[\"api/routes/pipeline.py\"]\n" + data.dependencies.map((d, i) => `  Pipeline -->|${d.type}| Node${i}[\"${d.to}\"]`).join("\n")
-    : "graph TD\n  A[No Dependencies Found]";
+  const depGraph = `
+%%{init: {'flowchart': {'curve': 'basis', 'theme': 'dark'}}}%%
+graph LR
+  FastAPI --> Ollama
+  FastAPI --> Groq
+  FastAPI --> ChromaDB
+  FastAPI --> SQLite[learner_progress.db]
+  React --> FastAPI
+  `;
 
   return (
     <div className="w-full flex flex-col gap-8 pb-12">
@@ -114,10 +125,10 @@ const Blueprint: React.FC = () => {
         </div>
         <div>
           <h1 className="text-3xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white to-white/60">
-            Nexus Architecture Blueprint
+            MoSPI Architecture Blueprint
           </h1>
           <p className="text-xs font-bold uppercase tracking-[0.3em] text-cyan-400 mt-2">
-            System Topology & Data Flow Orchestration
+            AI Learning Platform Topology & Data Flow
           </p>
         </div>
       </div>
@@ -132,7 +143,7 @@ const Blueprint: React.FC = () => {
               <span className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
               Term Inspector
             </h2>
-            <TermInspector terms={data.dictionary} onSearch={handleSearch} />
+            <TermInspector terms={LMS_DICTIONARY} onSearch={handleSearch} />
           </div>
         </div>
 
@@ -146,7 +157,7 @@ const Blueprint: React.FC = () => {
             </h2>
             <MermaidCanvas 
               id="execution-flow-chart"
-              chart={data.execution_flow} 
+              chart={LMS_GRAPH} 
               className="bg-black/20 border-white/5" 
             />
           </div>

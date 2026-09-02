@@ -1,0 +1,108 @@
+{
+  "framework": "MoSPI FRAC Model",
+  "version": "1.0",
+  "competencies": {
+    "Domain": {
+      "name": "Statistical Competencies",
+      "description": "Core competencies related to statistical operations and methodologies.",
+      "skills": [
+        {
+          "id": "STAT-001",
+          "name": "National Accounts & Macroeconomic Statistics",
+          "levels": ["Beginner", "Intermediate", "Advanced", "Expert"]
+        },
+        {
+          "id": "STAT-002",
+          "name": "Index Numbers (CPI/WPI)",
+          "levels": ["Beginner", "Intermediate", "Advanced", "Expert"]
+        },
+        {
+          "id": "STAT-003",
+          "name": "Annual Survey of Industries (ASI)",
+          "levels": ["Beginner", "Intermediate", "Advanced", "Expert"]
+        },
+        {
+          "id": "STAT-004",
+          "name": "NSS / Periodic Labour Force Survey (PLFS)",
+          "levels": ["Beginner", "Intermediate", "Advanced", "Expert"]
+        }
+      ]
+    },
+    "Functional": {
+      "name": "Functional & Digital Competencies",
+      "description": "Skills required for data processing, analysis, and digital governance.",
+      "skills": [
+        {
+          "id": "FUNC-001",
+          "name": "Data Privacy (DPDP Act 2023 compliance)",
+          "levels": ["Beginner", "Intermediate", "Advanced"]
+        },
+        {
+          "id": "FUNC-002",
+          "name": "Python/R for Statistical Analysis",
+          "levels": ["Beginner", "Intermediate", "Advanced", "Expert"]
+        },
+        {
+          "id": "FUNC-003",
+          "name": "Big Data Analytics",
+          "levels": ["Beginner", "Intermediate", "Advanced"]
+        },
+        {
+          "id": "FUNC-004",
+          "name": "Data Visualization & Dashboards",
+          "levels": ["Beginner", "Intermediate", "Advanced"]
+        }
+      ]
+    },
+    "Behavioral": {
+      "name": "Behavioral Competencies",
+      "description": "Soft skills and professional conduct standards.",
+      "skills": [
+        {
+          "id": "BEH-001",
+          "name": "Ethics & Integrity",
+          "levels": ["Foundation", "Proficient", "Advanced"]
+        },
+        {
+          "id": "BEH-002",
+          "name": "Citizen-Centric Data Collection",
+          "levels": ["Foundation", "Proficient", "Advanced"]
+        },
+        {
+          "id": "BEH-003",
+          "name": "Leadership & Team Management",
+          "levels": ["Foundation", "Proficient", "Advanced"]
+        }
+      ]
+    }
+  },
+  "roles": {
+    "JSO": {
+      "name": "Junior Statistical Officer",
+      "cadre": "SSS",
+      "required_competencies": {
+        "Domain": ["STAT-003", "STAT-004"],
+        "Functional": ["FUNC-001", "FUNC-002"],
+        "Behavioral": ["BEH-001", "BEH-002"]
+      }
+    },
+    "SSO": {
+      "name": "Senior Statistical Officer",
+      "cadre": "SSS",
+      "required_competencies": {
+        "Domain": ["STAT-002", "STAT-003", "STAT-004"],
+        "Functional": ["FUNC-001", "FUNC-002", "FUNC-004"],
+        "Behavioral": ["BEH-001", "BEH-002", "BEH-003"]
+      }
+    },
+    "Director": {
+      "name": "Director / DDG",
+      "cadre": "ISS",
+      "required_competencies": {
+        "Domain": ["STAT-001", "STAT-002"],
+        "Functional": ["FUNC-003", "FUNC-004"],
+        "Behavioral": ["BEH-001", "BEH-003"]
+      }
+    }
+  }
+}

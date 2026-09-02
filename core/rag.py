@@ -103,17 +103,20 @@ class CourseRecommender:
         course_context = "\n".join(course_context_parts) if course_context_parts else "No relevant courses found in the catalog."
         
         prompt = f"""You are an AI Learning Advisor for MoSPI.
-Based on the official's identified skill gaps and the available iGOT courses, suggest a personalized Learning Pathway.
+Based on the official's identified skill gaps and the available iGOT/NSSTA courses, suggest a personalized Learning Pathway.
+You must execute a hybrid recommendation strategy:
+- Micro-learning / On-demand: Asynchronous iGOT karmayogi courses.
+- Institutional / Physical / Cohort-based: NSSTA TPAC calendar schedules (workshop dates, eligibility by cadre).
 
 ## Identified Skill Gaps:
 {", ".join(skill_gaps)}
 
-## Available Courses (from iGOT catalog):
+## Available Courses & Training Calendar (from iGOT & NSSTA):
 {course_context}
 
 ## Instructions:
-1. Recommend the most relevant courses from the list above to address the skill gaps.
-2. Explain WHY each course is recommended.
+1. Recommend the most relevant hybrid mix of courses from the list above to address the skill gaps.
+2. Explain WHY each course/workshop is recommended.
 3. Be encouraging and format the output as a clean, actionable learning pathway.
 """
 

@@ -11,30 +11,24 @@ const initialState: PipelineState = {
 
 const PipelineContext = createContext<{
   state: PipelineState;
-  startPipeline: (title: string, description: string) => Promise<any>;
+  startPipeline: (designation: string, profileText: string, department?: string, education?: string, trainingHistory?: string[]) => Promise<any>;
   reset: () => void;
 } | undefined>(undefined);
 
 export function pipelineReducer(state: PipelineState, action: PipelineAction): PipelineState {
   switch (action.type) {
     case 'START':
-      return { ...initialState, stage: 'classification', logs: ['Initiating pipeline...'] };
+      return { ...initialState, stage: 'profiling', logs: ['Initiating Competency Analysis...'] };
+    case 'SET_STAGE':
+      return { ...state, stage: action.payload };
     case 'UPDATE_PROGRESS':
       return { ...state, progress: action.payload };
     case 'ADD_LOG':
       return { ...state, logs: [...state.logs, action.payload] };
     case 'SET_RESULT':
-      const nextStageMap: Record<string, PipelineStage> = {
-        classification: 'triage',
-        triage: 'rag',
-        rag: 'resolution',
-        resolution: 'judge',
-        judge: 'complete'
-      };
       return {
         ...state,
         results: { ...state.results, [action.payload.key]: action.payload.data },
-        stage: nextStageMap[action.payload.key] || state.stage
       };
     case 'COMPLETE':
       return { ...state, stage: 'complete', progress: 1 };
@@ -50,7 +44,7 @@ export function pipelineReducer(state: PipelineState, action: PipelineAction): P
 export const PipelineProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(pipelineReducer, initialState);
 
-  const startPipeline = useCallback(async (title: string, description: string) => {
+  const startPipeline = useCallback(async (designation: string, profileText: string, department?: string, education?: string, trainingHistory?: string[]) => {
     dispatch({ type: 'START' });
 
     const ctrl = new AbortController();
@@ -62,7 +56,13 @@ export const PipelineProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           'Content-Type': 'application/json',
           'Accept': 'text/event-stream'
         },
-        body: JSON.stringify({ title, description, enable_resolution: true }),
+        body: JSON.stringify({ 
+          designation, 
+          profile_text: profileText,
+          department,
+          education,
+          training_history: trainingHistory
+        }),
         signal: ctrl.signal,
         async onopen(response) {
           if (response.ok && response.headers.get('content-type')?.includes('text/event-stream')) {
@@ -81,6 +81,7 @@ export const PipelineProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           if (msg.event === 'status') {
             let data = JSON.parse(msg.data);
             if (typeof data === 'string') data = JSON.parse(data);
+            if (data.stage) dispatch({ type: 'SET_STAGE', payload: data.stage as PipelineStage });
             if (data.message) dispatch({ type: 'ADD_LOG', payload: data.message });
             if (data.progress) dispatch({ type: 'UPDATE_PROGRESS', payload: data.progress });
           } else if (msg.event === 'result') {

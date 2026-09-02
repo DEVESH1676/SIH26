@@ -3,10 +3,10 @@ import { motion } from "framer-motion";
 import { cn } from "../../lib/utils";
 
 const sections = [
-  { id: "classify", label: "Pipeline" },
-  { id: "analytics", label: "Analytics" },
-  { id: "history", label: "History" },
-  { id: "blueprint", label: "Blueprint" },
+  { id: "classify", label: "Competency Assessment" },
+  { id: "analytics", label: "Workforce Analytics" },
+  { id: "history", label: "Learner History" },
+  { id: "blueprint", label: "Architecture Blueprint" },
 ];
 
 interface PillNavbarProps {
@@ -106,7 +106,7 @@ const PillNavbar: React.FC<PillNavbarProps> = ({ onViewChange }) => {
           onClick={(e) => handleNavClick("classify", e)}
           className="font-black text-[11px] tracking-[0.2em] uppercase md:ml-4 md:mr-6 whitespace-nowrap cursor-pointer text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500"
         >
-          Nexus AI
+          MoSPI AI
         </motion.a>
 
         {/* DESKTOP NAV (Framer Motion Pill) */}

@@ -392,3 +392,24 @@
 - `core/agent.py` - Replaced with ProfileAgent, PathwayAgent, AssessmentAgent, LMSLayer.
 - `core/judge.py` - Replaced with SubjectiveAssessor.
 - `core/embeddings.py` - Updated to handle iGOT course schema.
+
+## LMS Refactor Phase: Data Ingestion & API Bridge Alignment
+**Status:** COMPLETE
+
+**What We Did Now:**
+- Generated `data/mock_igot_catalog.csv` with 12 structured MoSPI & iGOT courses (Statistical, Technical, Digital Governance, Behavioural).
+- Ingested catalog into ChromaDB collection. Verified semantic search returns relevant courses (`IGOT-TECH-001` for Python, `IGOT-TECH-003` for GIS).
+- Re-mapped Pydantic schemas in `api/models.py` for learner profiles, pathways, MCQs, and subjective answer evaluations.
+- Re-mapped FastAPI routes (`classify.py`, `retrieve.py`, `pipeline.py`, and added `assessment.py`).
+- Updated `main.py` app state lifecycle. Started FastAPI server on port 8001 (`http://localhost:8001/docs`). Tested `/api/health` and `/api/recommend-pathway` endpoints.
+
+**Files Created/Modified:**
+- `data/generate_igot_courses.py` - Created synthetic course catalog script.
+- `data/mock_igot_catalog.csv` - 12 synthetic iGOT courses dataset.
+- `api/models.py` - Pydantic models for LMS domain.
+- `api/deps.py` - Dependency injection for LMS modules.
+- `api/routes/classify.py` - Profile competency analysis endpoint.
+- `api/routes/retrieve.py` - Course recommendation endpoint.
+- `api/routes/assessment.py` - MCQ generation & subjective answer evaluation endpoints.
+- `api/routes/pipeline.py` - SSE streaming pipeline endpoint for learning plan generation.
+- `main.py` - Updated FastAPI entry point and routers.

@@ -1,10 +1,9 @@
 """
-Nexus AI — Health Check Endpoint
-GET /api/health — Returns API status, loaded models, and available categories.
+MoSPI AI Learning Platform — Health Check Endpoint
+GET /api/health — Returns API status and loaded LMS model information.
 """
 from fastapi import APIRouter, Request
 
-import config
 from api.models import HealthResponse
 
 router = APIRouter(prefix="/api", tags=["system"])
@@ -14,12 +13,12 @@ router = APIRouter(prefix="/api", tags=["system"])
 def health_check(request: Request) -> HealthResponse:
     """Returns API health status and loaded model information."""
     models_loaded = (
-        hasattr(request.app.state, "classifier")
-        and request.app.state.classifier is not None
+        hasattr(request.app.state, "analyzer")
+        and request.app.state.analyzer is not None
     )
     return HealthResponse(
         status="ok",
         models_loaded=models_loaded,
         version="4.0.0",
-        categories=config.CATEGORIES,
+        domain="MoSPI AI Learning Platform",
     )

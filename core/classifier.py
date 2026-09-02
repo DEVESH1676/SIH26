@@ -67,17 +67,21 @@ class CompetencyAnalyzer:
         Analyze the official's profile and return their current skills and identified gaps.
         """
         prompt = f"""You are an HR Capacity Building AI for the Ministry of Statistics (MoSPI).
-Analyze this official's profile. Identify their current competencies and explicitly list their missing 'Skill Gaps' based on standard requirements for their designation.
+Analyze this official's profile against the FRAC (Framework for Roles, Activities, and Competencies) model.
+Identify their current competencies and explicitly list their missing 'Skill Gaps' based on standard requirements for their designation.
 
 Designation: {designation}
 Profile/Experience: {profile_text}
 
-Domains to consider: Statistical, Technical, Digital Governance, Behavioural/Managerial.
+Domains to map:
+1. Domain (Statistical Competencies)
+2. Functional (Functional & Digital Competencies)
+3. Behavioral (Behavioral Competencies)
 
 Reply ONLY with valid JSON (no markdown) in the following format:
 {{
-  "current_skills": ["Skill 1", "Skill 2"],
-  "skill_gaps": ["Missing Skill 1", "Missing Skill 2"],
+  "current_skills": {{"Domain": [], "Functional": [], "Behavioral": []}},
+  "skill_gaps": {{"Domain": [], "Functional": [], "Behavioral": []}},
   "analysis_summary": "A 2-sentence summary of their competency profile."
 }}
 """
@@ -86,8 +90,8 @@ Reply ONLY with valid JSON (no markdown) in the following format:
         if not result:
             # Fallback
             return {
-                "current_skills": ["General Administration"],
-                "skill_gaps": ["Data Analysis", "Digital Governance"],
+                "current_skills": {"Domain": ["General Administration"], "Functional": [], "Behavioral": []},
+                "skill_gaps": {"Domain": ["Data Analysis"], "Functional": ["Digital Governance"], "Behavioral": []},
                 "analysis_summary": "Could not perform deep analysis. Assuming default gaps for capacity building."
             }
             

@@ -1,12 +1,11 @@
 import React from 'react';
 import IntelligenceFeed from '../components/Pipeline/IntelligenceFeed';
 import SystemReadiness from '../components/Pipeline/SystemReadiness';
-import TicketForm from "../components/Command/TicketForm";
+import ProfileForm from "../components/Command/ProfileForm";
 import GlowingProgressBar from "../components/Command/GlowingProgressBar";
 import TerminalLogs from "../components/Visuals/TerminalLogs";
-import HealthPulse from "../components/Pulse/HealthPulse";
-import History from "../components/History/History";
-import AnalyticsMock from "../components/Analytics/AnalyticsMock";
+import LearnerHistory from "../components/History/LearnerHistory";
+import AdminAnalytics from "../components/Analytics/AdminAnalytics";
 import { usePipeline } from '../hooks/usePipeline';
 import HoverBorderCard from '../components/ui/HoverBorderCard';
 
@@ -32,13 +31,13 @@ const Operations: React.FC = () => {
                 </svg>
               </div>
               <div>
-                <h1 className="text-lg font-black tracking-tight text-white/90 leading-none">Command Center</h1>
-                <p className="text-[9px] text-[#94a3b8] font-black uppercase tracking-[0.2em] mt-1.5">Neural Link Active</p>
+                <h1 className="text-lg font-black tracking-tight text-white/90 leading-none">Learning Plan Generator</h1>
+                <p className="text-[9px] text-[#94a3b8] font-black uppercase tracking-[0.2em] mt-1.5">MoSPI AI Active</p>
               </div>
             </div>
             
             <div className="relative z-10">
-              <TicketForm onSubmit={startPipeline} isLoading={isPipelineActive} />
+              <ProfileForm onSubmit={startPipeline} isLoading={isPipelineActive} />
               <GlowingProgressBar progress={state.progress} stage={state.stage} />
             </div>
           </HoverBorderCard>
@@ -62,22 +61,19 @@ const Operations: React.FC = () => {
       {/* ROW 2: SYSTEM INSIGHTS */}
       <div className="space-y-12 pt-12 border-t border-white/5">
         <div className="flex flex-col gap-2">
-          <h2 className="text-2xl font-black tracking-tight text-white/90 uppercase tracking-widest">Operational Insights</h2>
-          <p className="text-[#94a3b8] text-[10px] font-black uppercase tracking-[0.3em]">Global Analytics & System Telemetry</p>
+          <h2 className="text-2xl font-black tracking-tight text-white/90 uppercase tracking-widest">Dashboard & Insights</h2>
+          <p className="text-[#94a3b8] text-[10px] font-black uppercase tracking-[0.3em]">MoSPI Official Statistics Telemetry</p>
         </div>
 
         <div className="space-y-8">
           {/* Top Insight Row: Side-by-Side Metrics */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div id="analytics">
-              <AnalyticsMock />
+              <AdminAnalytics />
             </div>
-            <HealthPulse />
-          </div>
-
-          {/* Bottom Insight Row: Full-Width History */}
-          <div id="history">
-            <History />
+            <div id="history">
+              <LearnerHistory />
+            </div>
           </div>
         </div>
       </div>

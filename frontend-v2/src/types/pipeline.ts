@@ -1,21 +1,20 @@
-export type PipelineStage = 'idle' | 'classification' | 'triage' | 'rag' | 'resolution' | 'judge' | 'complete' | 'error';
+export type PipelineStage = 'idle' | 'profiling' | 'identifying_gaps' | 'matching_courses' | 'pathway_built' | 'complete' | 'error';
 
 export interface PipelineState {
   stage: PipelineStage;
   progress: number;
   logs: string[];
   results: {
-    classification?: any;
-    triage?: any;
-    rag?: any;
-    resolution?: any;
-    judge?: any;
+    profile?: any;
+    pathway?: any;
+    assessment?: any;
   };
   error?: string;
 }
 
 export type PipelineAction =
   | { type: 'START' }
+  | { type: 'SET_STAGE'; payload: PipelineStage }
   | { type: 'UPDATE_PROGRESS'; payload: number }
   | { type: 'ADD_LOG'; payload: string }
   | { type: 'SET_RESULT'; payload: { key: keyof PipelineState['results']; data: any } }

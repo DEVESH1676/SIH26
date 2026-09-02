@@ -1,62 +1,53 @@
 """
-Nexus AI Ticket Intelligence Platform — v4.0 API
-FastAPI backend wrapping the core intelligence modules.
+MoSPI AI Learning Platform — v4.0 API
+FastAPI backend wrapping the core capacity building modules.
 
 Run:
-    uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    uvicorn main:app --host 0.0.0.0 --port 8001 --reload
 
 Swagger UI:
-    http://localhost:8000/docs
+    http://localhost:8001/docs
 """
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
-from core.classifier import TicketClassifier
-from core.rag import ResolutionEngine
-from core.agent import TriageAgent, ResolutionAgent, AutomationDiscoveryAgent
-from core.judge import ResolutionJudge
-from core.feedback import FeedbackStore
+from core.classifier import CompetencyAnalyzer
+from core.rag import CourseRecommender, QuizGenerator
+from core.agent import ProfileAgent, PathwayAgent, AssessmentAgent, LMSLayer
+from core.judge import SubjectiveAssessor
 
-from api.routes import health, classify, retrieve, pipeline, blueprint, history
+from api.routes import health, classify, retrieve, pipeline, assessment
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Load all ML models and resources at startup, clean up at shutdown."""
-    print("⚡ Nexus AI API — Loading intelligence modules...")
+    print("⚡ MoSPI AI Learning API — Loading intelligence modules...")
 
-    # Load heavy resources once (mirrors Streamlit's @st.cache_resource)
-    app.state.classifier = TicketClassifier()
-    print("  ✓ Classifier loaded")
-    app.state.rag_engine = ResolutionEngine()
-    print("  ✓ RAG Engine loaded")
-    app.state.triage_agent = TriageAgent()
-    print("  ✓ Triage Agent loaded")
-    app.state.resolution_agent = ResolutionAgent()
-    print("  ✓ Resolution Agent loaded")
-    app.state.automation_agent = AutomationDiscoveryAgent()
-    print("  ✓ Automation Discovery Agent loaded")
-    app.state.judge = ResolutionJudge()
-    print("  ✓ Resolution Judge loaded")
-    app.state.feedback_store = FeedbackStore()
-    print("  ✓ Feedback Store loaded")
+    app.state.analyzer = CompetencyAnalyzer()
+    print("  ✓ Competency Analyzer loaded")
+    app.state.recommender = CourseRecommender()
+    print("  ✓ Course Recommender loaded")
+    app.state.quiz_generator = QuizGenerator()
+    print("  ✓ Quiz Generator loaded")
+    app.state.lms_layer = LMSLayer()
+    print("  ✓ LMS Orchestration Layer loaded")
+    app.state.subjective_assessor = SubjectiveAssessor()
+    print("  ✓ Subjective Assessor loaded")
 
-    print("⚡ All modules loaded. Nexus AI API ready.")
+    print("⚡ All modules loaded. MoSPI AI Learning API ready.")
     yield
 
-    # Shutdown
-    print("⚡ Shutting down Nexus AI API...")
-    if hasattr(app.state, "feedback_store"):
-        app.state.feedback_store.close()
+    print("⚡ Shutting down MoSPI AI Learning API...")
 
 
 app = FastAPI(
-    title="Nexus AI — Ticket Intelligence API",
+    title="MoSPI AI Learning Platform API",
     description=(
-        "RESTful API wrapping the Nexus AI classification cascade, "
-        "RAG retrieval, agent-based triage, and LLM-as-Judge quality evaluation. "
+        "RESTful API wrapping official competency analysis, iGOT course recommendations, "
+        "MCQ quiz generation, and subjective answer evaluations. "
         "Supports both synchronous requests and Server-Sent Events for real-time streaming."
     ),
     version="4.0.0",
@@ -80,9 +71,9 @@ app.add_middleware(
 app.include_router(health.router)
 app.include_router(classify.router)
 app.include_router(retrieve.router)
+app.include_router(assessment.router)
 app.include_router(pipeline.router)
-app.include_router(blueprint.router)
-app.include_router(history.router)
+
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
@@ -91,11 +82,12 @@ async def log_requests(request: Request, call_next):
     print(f"Response status: {response.status_code}")
     return response
 
+
 @app.get("/", include_in_schema=False)
 def root():
     """Root redirect — points users to Swagger UI."""
     return {
-        "message": "Nexus AI API v4.0 — Visit /docs for Swagger UI",
+        "message": "MoSPI AI Learning API v4.0 — Visit /docs for Swagger UI",
         "docs": "/docs",
         "health": "/api/health",
     }

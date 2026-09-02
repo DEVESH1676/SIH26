@@ -22,9 +22,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, onViewChange }) => {
           <div className="max-w-[1700px] mx-auto flex flex-col md:flex-row justify-between items-center gap-8 text-pretty">
             <div className="flex items-center gap-4 opacity-80 transition-all cursor-default">
               <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shadow-2xl">
-                <span className="text-[12px] font-black text-white">N</span>
+                <span className="text-[12px] font-black text-white">M</span>
               </div>
-              <span className="text-[11px] font-black tracking-[0.5em] uppercase text-white">Nexus Intelligence Platform</span>
+              <span className="text-[11px] font-black tracking-[0.5em] uppercase text-white">MoSPI AI Learning Platform</span>
             </div>
             <div className="flex gap-12 text-[11px] font-black text-zinc-500 uppercase tracking-widest">
               <a href="#" className="hover:text-cyan-400 transition-colors duration-300">Documentation</a>
@@ -33,7 +33,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, onViewChange }) => {
             </div>
           </div>
           <div className="max-w-[1700px] mx-auto mt-12 pt-8 border-t border-white/[0.02] flex justify-center">
-            <p className="text-[10px] font-bold text-zinc-700 uppercase tracking-[0.4em]">© 2026 NEXUS AI CORE • GLOBAL ARCHITECTURE</p>
+            <p className="text-[10px] font-bold text-zinc-700 uppercase tracking-[0.4em]">© 2026 MoSPI CAPACITY BUILDING</p>
           </div>
         </footer>
       </div>

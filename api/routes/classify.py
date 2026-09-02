@@ -1,32 +1,26 @@
 """
-Nexus AI — Standalone Classification Endpoint
-POST /api/classify — Runs the 4-tier cascade and returns ClassificationResult.
+MoSPI AI Learning Platform — Competency Analysis Endpoint
+POST /api/analyze-profile — Extracts current skills and identifies missing skill gaps.
 """
 import asyncio
-
 from fastapi import APIRouter, Depends
 
-from core.classifier import TicketClassifier
-from api.models import TicketRequest, ClassificationResult
-from api.deps import get_classifier
+from core.classifier import CompetencyAnalyzer
+from api.models import LearnerProfileRequest, LearnerProfileResponse
+from api.deps import get_analyzer
 
-router = APIRouter(prefix="/api", tags=["modular"])
+router = APIRouter(prefix="/api", tags=["competency"])
 
 
-@router.post("/classify", response_model=ClassificationResult)
-async def classify_ticket(
-    ticket: TicketRequest,
-    classifier: TicketClassifier = Depends(get_classifier),
-) -> ClassificationResult:
+@router.post("/analyze-profile", response_model=LearnerProfileResponse)
+async def analyze_profile(
+    profile: LearnerProfileRequest,
+    analyzer: CompetencyAnalyzer = Depends(get_analyzer),
+) -> LearnerProfileResponse:
     """
-    Standalone classification endpoint.
-    Runs the 4-tier cascade (novelty → fast path → LLM judge → escalation)
-    and returns the structured classification result.
-
-    Uses asyncio.to_thread() because classifier.classify() is synchronous
-    and may trigger blocking LLM calls to Groq/Ollama.
+    Analyze official's profile text and designation to identify competency gaps.
     """
     result = await asyncio.to_thread(
-        classifier.classify, ticket.title, ticket.description
+        analyzer.analyze_profile, profile.designation, profile.profile_text
     )
-    return ClassificationResult(**result)
+    return LearnerProfileResponse(**result)
