@@ -1,93 +1,85 @@
 """
-MoSPI AI Learning Platform — v4.0 API
-FastAPI backend wrapping the core capacity building modules.
-
-Run:
-    uvicorn main:app --host 0.0.0.0 --port 8001 --reload
-
-Swagger UI:
-    http://localhost:8001/docs
+MoSPI AI Skill Intelligence & Learning Platform
+FastAPI application with learning, assessment, and analytics.
 """
+from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
+import asyncio, os, sys, logging
 
-from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from core.classifier import CompetencyAnalyzer
-from core.rag import CourseRecommender, QuizGenerator
-from core.agent import ProfileAgent, PathwayAgent, AssessmentAgent, LMSLayer
-from core.judge import SubjectiveAssessor
+from config.settings import get_settings
+from core.database import init_db
+from core.igot_api import IGOTClient
+from core.igot_sync import IGOTSyncService
+from core.rag import CompetencyAnalyzer, CourseRecommender
+from core.quiz_engine import QuizEngine
+from core.attempt_tracker import AttemptTracker
+from core.file_processor import FileProcessor
+from core.learning_tracker import LearningTracker
+from core.analytics import LearningAnalytics
+from core.virtual_assistant import VirtualAssistant
+from api.middleware import setup_cors, auth_middleware, rbac_middleware, rate_limit_middleware, audit_logging_middleware
+from api.routes import auth as auth_routes
+from api.routes import classify as classify_routes
+from api.routes import health as health_routes
+from api.routes import pipeline as pipeline_routes
 
-from api.routes import health, classify, retrieve, pipeline, assessment
+settings = get_settings()
 
+# ── Logging Setup ──────────────────────────────────────────────
+logging.basicConfig(
+    level=getattr(logging, settings.log_level),
+    format=settings.log_format,
+)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Load all ML models and resources at startup, clean up at shutdown."""
-    print("⚡ MoSPI AI Learning API — Loading intelligence modules...")
+    # Initialize database
+    await asyncio.to_thread(init_db)
+    print("  ✓ Database initialized")
 
-    app.state.analyzer = CompetencyAnalyzer()
-    print("  ✓ Competency Analyzer loaded")
-    app.state.recommender = CourseRecommender()
-    print("  ✓ Course Recommender loaded")
-    app.state.quiz_generator = QuizGenerator()
-    print("  ✓ Quiz Generator loaded")
-    app.state.lms_layer = LMSLayer()
-    print("  ✓ LMS Orchestration Layer loaded")
-    app.state.subjective_assessor = SubjectiveAssessor()
-    print("  ✓ Subjective Assessor loaded")
+    # Initialize core services
+    app.state.igot_client = IGOTClient()
+    app.state.igot_sync = IGOTSyncService(app.state.igot_client)
+    await app.state.igot_sync.start()
 
-    print("⚡ All modules loaded. MoSPI AI Learning API ready.")
+    app.state.competency_analyzer = CompetencyAnalyzer()
+    app.state.course_recommender = CourseRecommender(app.state.igot_client)
+    app.state.quiz_engine = QuizEngine()
+    app.state.attempt_tracker = AttemptTracker()
+    app.state.file_processor = FileProcessor()
+    app.state.learning_tracker = LearningTracker()
+    app.state.analytics = LearningAnalytics()
+    app.state.virtual_assistant = VirtualAssistant()
+
+    print("  ✓ All services initialized")
+    print(f"  ✓ iGOT integration: {'enabled' if settings.igot_api_key else 'disabled'}")
+    print(f"  ✓ LLM provider: {'Ollama' if settings.ollama_base_url else 'Groq'}")
     yield
-
-    print("⚡ Shutting down MoSPI AI Learning API...")
-
+    await app.state.igot_sync.stop()
+    print("  ✓ All services stopped")
 
 app = FastAPI(
-    title="MoSPI AI Learning Platform API",
-    description=(
-        "RESTful API wrapping official competency analysis, iGOT course recommendations, "
-        "MCQ quiz generation, and subjective answer evaluations. "
-        "Supports both synchronous requests and Server-Sent Events for real-time streaming."
-    ),
-    version="4.0.0",
+    title=settings.app_name,
+    version="2.0.0",
     lifespan=lifespan,
 )
 
-# CORS — allow React frontend in dev (Vite default ports)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",  # Vite default
-        "http://localhost:3000",  # CRA / Next.js default
-        "http://localhost:8080",  # Alternative dev server
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# ── Middleware ─────────────────────────────────────────────────
+setup_cors(app)
+app.middleware("http")(rate_limit_middleware)
+app.middleware("http")(auth_middleware)
+app.middleware("http")(rbac_middleware)
+app.middleware("http")(audit_logging_middleware)
 
-# Register route modules
-app.include_router(health.router)
-app.include_router(classify.router)
-app.include_router(retrieve.router)
-app.include_router(assessment.router)
-app.include_router(pipeline.router)
+# ── API Routes ─────────────────────────────────────────────────
+app.include_router(health_routes.router)
+app.include_router(auth_routes.router)
+app.include_router(classify_routes.router)
+app.include_router(pipeline_routes.router)
 
-
-@app.middleware("http")
-async def log_requests(request: Request, call_next):
-    print(f"Incoming request: {request.method} {request.url.path}")
-    response = await call_next(request)
-    print(f"Response status: {response.status_code}")
-    return response
-
-
-@app.get("/", include_in_schema=False)
-def root():
-    """Root redirect — points users to Swagger UI."""
-    return {
-        "message": "MoSPI AI Learning API v4.0 — Visit /docs for Swagger UI",
-        "docs": "/docs",
-        "health": "/api/health",
-    }
+# ── Frontend ───────────────────────────────────────────────────
+if os.path.exists("frontend/dist"):
+    app.mount("/", StaticFiles(directory="frontend/dist", html=True), name="static")

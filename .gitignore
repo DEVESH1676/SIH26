@@ -1,53 +1,45 @@
-# Python Environments
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Virtual env
+.venv/
 venv/
 env/
+
+# Environment
 .env
+.env.local
+.env.production
 
-# Local tool state
-.codex
+# Data
+data/mospi_learning.db
+data/uploads/*
+data/chroma/*
+!data/chroma/.gitkeep
 
-# Compiled Python files
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-# Vector Database (Do not upload!)
-chroma_db/
-
-# IDE / Editor folders
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# Temporary logs / scripts
+# OS
+.DS_Store
+Thumbs.db
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Logs
 *.log
-output.txt
+logs/
 
-# Runtime data
-data/*.db
-
-# Generated graph exports
-graphify-out/
-.planning/graphs/.last-build-snapshot.json
-
-# Depending on your preference, you could also ignore the dataset.
-# Uncomment the line below if the CSV gets too large (>100MB) for GitHub.
-# data/*.csv
-
-# ── Learning Platform ─────────────────────────────────────
-data/learning.db
-data/uploads/*
-!data/uploads/.gitkeep
-chroma_db/.chroma
-.env
-__pycache__/
-*.pyc
-.venv/
-venv/
-*.egg-info/
-dist/
-build/
-frontend-v2/dist/
-frontend-v2/node_modules/
+# Uploads
+uploads/

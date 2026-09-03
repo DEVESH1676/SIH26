@@ -1,153 +1,217 @@
 """
-MoSPI AI Learning Platform — Pydantic Data Contracts
-Every model mirrors the exact dict keys returned by core LMS modules.
+Pydantic models for the MoSPI Learning Platform API.
+Replaces all IT-ticket-centric models.
 """
-from __future__ import annotations
-from typing import Optional
 from pydantic import BaseModel, Field
+from typing import Optional
+from datetime import datetime
 
 
-# ── Profiling Models ──────────────────────────────────────
-class LearnerProfileRequest(BaseModel):
-    """Input for Competency Analysis."""
-    designation: str = Field(..., min_length=2, max_length=200, description="Official's designation (e.g. Statistical Officer)")
-    department: Optional[str] = Field(None, description="Department or Cadre (e.g., ISS, SSS)")
-    education: Optional[str] = Field(None, description="Educational background")
-    training_history: Optional[list[str]] = Field(None, description="Previously completed courses/training")
-    profile_text: str = Field(..., min_length=5, max_length=5000, description="Summary of official's experience, background, and current duties")
+# ── User Models ──────────────────────────────────────────────
+
+class UserCreate(BaseModel):
+    username: str = Field(..., min_length=3, max_length=100)
+    email: str = Field(..., max_length=200)
+    password: str = Field(..., min_length=8)
+    designation: str = Field(..., max_length=200)
+    department: str = Field(..., max_length=200)
+    role: str = Field(default="learner")
 
 
-class LearnerProfileResponse(BaseModel):
-    """Output of Competency Analysis."""
-    current_skills: dict[str, list[str]]
-    skill_gaps: dict[str, list[str]]
-    analysis_summary: str
+class UserResponse(BaseModel):
+    user_id: str
+    username: str
+    email: str
+    designation: str
+    department: str
+    roles: list[str]
 
 
-# ── Course Recommendation & Pathway Models ─────────────────
-class PathwayRequest(BaseModel):
-    """Input for Learning Pathway recommendation."""
-    skill_gaps: list[str] = Field(..., description="List of missing skills identified for the official")
+# ── Course Models ────────────────────────────────────────────
+
+class CourseResponse(BaseModel):
+    id: str
+    title: str
+    description: str
+    domain: str
+    duration_hours: float
+    difficulty: str
+    skills: list[str]
+    tags: list[str]
+    source: str  # "igot" | "local" | "tpac"
 
 
 class CourseRecommendation(BaseModel):
-    """Single iGOT course recommendation."""
-    course_id: str
-    course_name: str
+    courses: list[CourseResponse]
+    tpac_programmes: Optional[list[dict]] = []
+    estimated_hours: float
+    recommended_sequence: list[dict]
+    source: str  # "igot" | "fallback"
+
+
+# ── Competency Models ────────────────────────────────────────
+
+class CompetencyLevel(BaseModel):
+    competency_id: str
+    competency_name: str
+    score: float
+    max_score: float = 5.0
+    assessed_at: Optional[str] = None
+    trend: Optional[str] = None  # "improving" | "stable" | "declining"
+
+
+class CompetencySummary(BaseModel):
     domain: str
-    skills_covered: str
-    description: str
+    level: str
+    score: float
+    strengths: list[str] = []
+    gaps: list[str] = []
 
 
-class PathwayResponse(BaseModel):
-    """Output of Course Recommender."""
-    suggested_pathway: str
-    courses: list[dict]
+class CompetencyAnalysis(BaseModel):
+    user_id: str
+    overall_level: str
+    competency_summary: dict[str, CompetencySummary]
+    skill_gaps: list[str]
+    recommended_pathway: str
+    recommended_courses: list[str]
+    generated_at: str
 
 
-# ── Quiz & Assessment Models ────────────────────────────────
-class QuizRequest(BaseModel):
-    """Input for MCQ generation."""
-    document_text: str = Field(..., min_length=20, max_length=10000, description="Uploaded learning material text")
-    num_questions: int = Field(default=5, ge=1, le=10, description="Number of questions to generate")
+# ── Quiz Models ──────────────────────────────────────────────
 
-
-class MCQQuestion(BaseModel):
-    """Single Multiple Choice Question."""
-    question_id: int
+class QuizQuestion(BaseModel):
+    id: str
     question: str
     options: list[str]
-    correct_answer: str
+    correct_answer: int
     explanation: str
+    difficulty: str  # "beginner" | "intermediate" | "advanced"
+    category: str
+
+
+class QuizCreate(BaseModel):
+    source_text: str
+    num_questions: int = Field(default=10, ge=1, le=50)
+    difficulty: str = Field(default="intermediate")
+    domain: Optional[str] = None
+    source_file: Optional[str] = None
 
 
 class QuizResponse(BaseModel):
-    """Generated Quiz from learning material."""
-    quiz_title: str
-    questions: list[MCQQuestion]
-
-
-# ── Subjective Answer Evaluation Models ─────────────────────
-class SubjectiveAnswerRequest(BaseModel):
-    """Input for evaluating a learner's subjective answer."""
-    question: str = Field(..., min_length=5, description="Assessment question asked to learner")
-    expected_key_points: str = Field(..., min_length=5, description="Key concepts required in correct answer")
-    learner_answer: str = Field(..., min_length=2, description="The answer provided by the official")
-
-
-class SubjectiveAnswerResponse(BaseModel):
-    """Evaluation result for subjective answer."""
-    accuracy: int
-    comprehension: int
-    completeness: int
-    overall: float
-    passed: bool
-    feedback: str
-
-
-# ── SSE Event Models ───────────────────────────────────────
-class PipelineStatusEvent(BaseModel):
-    """Streamed during learning plan creation via SSE."""
-    stage: str       # profiling | identifying_gaps | matching_courses | building_pathway | complete
-    message: str     # Human-readable status message
-    progress: float  # 0.0 to 1.0
-
-
-# ── Health ─────────────────────────────────────────────────
-class HealthResponse(BaseModel):
-    """Health check response."""
-    status: str = "ok"
-    models_loaded: bool
-    version: str = "4.0.0"
-    domain: str = "MoSPI AI Learning Platform"
-
-
-# ── Auth & SSO Models ──────────────────────────────────────
-class SSOLoginRequest(BaseModel):
-    """Input for Jan Parichay Mock SSO."""
-    email: str
-    password: Optional[str] = None
-
-class AuthResponse(BaseModel):
-    """Output for successful authentication."""
-    token: str
-    user: dict
-    status: str
-    provider: str
-
-
-# ── File Upload Models ─────────────────────────────────────
-class FileUploadResponse(BaseModel):
-    """Response after document parsing."""
-    filename: str
-    content_length: int
-    extracted_text: str
-    status: str = "success"
-
-
-# ── Progress & Tracking Models ─────────────────────────────
-class QuizAttemptRequest(BaseModel):
-    """Log a quiz attempt."""
-    learner_id: str
     quiz_id: str
-    score: float
+    quiz_title: str
+    questions: list[QuizQuestion]
+    source: str  # "llm" | "adaptive"
+
+
+class QuizAttemptRequest(BaseModel):
+    quiz_id: str
+    answers: dict  # {question_id: selected_option_index}
+    time_taken_seconds: int
+
+
+class QuizResult(BaseModel):
+    score: int
+    total: int
+    percentage: float
     passed: bool
+    results: list[dict]
 
-class QuizAttemptResponse(BaseModel):
-    """Response after logging a quiz attempt."""
-    status: str = "success"
+
+# ── Learning Progress Models ─────────────────────────────────
+
+class LearningSession(BaseModel):
+    session_id: str
+    activity_type: str
+    resource_id: str
+    resource_type: str
+    duration_seconds: int
+    started_at: str
+    completed_at: str
+
+
+class LearningHoursResponse(BaseModel):
+    total_sessions: int
+    total_hours: float
+    average_session_minutes: float
+    first_session: Optional[str] = None
+    last_session: Optional[str] = None
+
+
+class CourseProgress(BaseModel):
+    course_id: str
+    progress: float  # 0-100
+    completed_at: Optional[str] = None
+
+
+# ── Analytics Models ─────────────────────────────────────────
+
+class AdminOverview(BaseModel):
+    total_learners: int
+    total_learning_sessions: int
+    total_quiz_attempts: int
+    total_enrolled_courses: int
+
+
+class WorkforceCompetency(BaseModel):
+    competency_id: str
+    competency_name: str
+    avg_score: float
+    assessed_count: int
+    mastery_rate: float
+
+
+class TrainingEffectiveness(BaseModel):
+    title: str
+    enrolled: int
+    avg_score: float
+    pass_rate: float
+
+
+class PredictiveGap(BaseModel):
+    competency_id: str
+    current_avg: float
+    previous_avg: float
+    decline_percent: float
+    priority: str  # "high" | "medium"
+
+
+class AdminAnalyticsResponse(BaseModel):
+    overview: AdminOverview
+    workforce_competency: list[WorkforceCompetency]
+    training_effectiveness: list[TrainingEffectiveness]
+    predictive_skill_gaps: list[PredictiveGap]
+
+
+# ── Virtual Assistant Models ─────────────────────────────────
+
+class AssistantRequest(BaseModel):
     message: str
+    language: str = Field(default="en")
+    user_context: Optional[dict] = None
 
 
-# ── Admin Dashboard Models ─────────────────────────────────
-class TopSkillGap(BaseModel):
-    skill: str
-    count: int
+class AssistantResponse(BaseModel):
+    response: str
+    suggested_actions: list[dict]
+    related_resources: list[dict]
+    intent: str
 
-class AdminOverviewResponse(BaseModel):
-    status: str = "success"
-    data: dict # Could be typed further if needed
 
-class AdminWorkforceResponse(BaseModel):
-    status: str = "success"
-    data: dict
+# ── File Upload Models ───────────────────────────────────────
+
+class FileUploadResponse(BaseModel):
+    file_id: str
+    file_name: str
+    file_type: str
+    file_size: int
+    text_extracted: str
+    chunks: list[dict]
+
+
+class MCQFromFileRequest(BaseModel):
+    file_type: str
+    num_questions: int = Field(default=10)
+    difficulty: str = Field(default="intermediate")
+    domain: Optional[str] = None

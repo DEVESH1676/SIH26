@@ -1,58 +1,95 @@
 """
-Authentication & Authorization Engine
-Handles JWT, mock Gov SSO (Parichay/Jan Parichay), and RBAC logic.
+Authentication module — JWT-based auth with RBAC.
 """
-from typing import Dict, Any, Optional
-import time
+import os, sys, datetime
+from typing import Optional
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from config.settings import get_settings
+from jose import JWTError, jwt
+from passlib.context import CryptContext
 
-class AuthEngine:
-    def __init__(self):
-        self.secret_key = "mospi-sih26-mock-secret"
-        
-    def mock_parichay_sso_login(self, email: str) -> Dict[str, Any]:
-        """
-        Mock integration with Jan Parichay (National Single Sign-On).
-        Returns a mock JWT-like session object.
-        """
-        # Determine role based on email domain or hardcoded mock users
-        role = "learner"
-        if "admin" in email or "director" in email:
-            role = "admin"
-            
-        return {
-            "token": f"mock-jwt-token-{int(time.time())}",
-            "user": {
-                "email": email,
-                "role": role,
-                "cadre": "ISS" if "director" in email else "SSS",
-                "designation": "Director" if role == "admin" else "Statistical Officer"
-            },
-            "status": "success",
-            "provider": "Jan Parichay SSO"
-        }
-        
-    def verify_token(self, token: str) -> bool:
-        """Validate the JWT token."""
-        return token.startswith("mock-jwt-token-")
-        
-    def check_rbac(self, user_role: str, required_role: str) -> bool:
-        """
-        Role-Based Access Control logic.
-        Admin can access everything, learners only their own resources.
-        """
-        if user_role == "admin":
+settings = get_settings()
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+ROLES = {
+    "admin":   {"permissions": ["read", "write", "delete", "manage_users", "view_analytics"]},
+    "trainer": {"permissions": ["read", "write", "view_analytics"]},
+    "learner": {"permissions": ["read", "write_own"]},
+    "viewer":  {"permissions": ["read"]},
+}
+
+def init_auth_db():
+    import sqlite3
+    conn = sqlite3.connect(settings.sqlite_path)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id TEXT PRIMARY KEY,
+            username TEXT UNIQUE NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            designation TEXT,
+            department TEXT,
+            roles TEXT
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS user_roles (
+            user_id TEXT,
+            role TEXT,
+            PRIMARY KEY (user_id, role)
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+# Run DB initialization when module is imported
+init_auth_db()
+
+def hash_password(password: str) -> str:
+    return pwd_context.hash(password)
+
+def verify_password(plain: str, hashed: str) -> bool:
+    return pwd_context.verify(plain, hashed)
+
+def create_access_token(data: dict, expires_delta: Optional[datetime.timedelta] = None) -> str:
+    to_encode = data.copy()
+    expire = datetime.datetime.now(datetime.timezone.utc) + (
+        expires_delta or datetime.timedelta(minutes=settings.jwt_access_token_expiry_minutes)
+    )
+    to_encode["exp"] = expire
+    return jwt.encode(to_encode, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
+
+def create_refresh_token(data: dict) -> str:
+    expire = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
+        days=settings.jwt_refresh_token_expiry_days
+    )
+    data["exp"] = expire
+    data["type"] = "refresh"
+    return jwt.encode(data, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
+
+def decode_token(token: str) -> Optional[dict]:
+    try:
+        return jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
+    except JWTError:
+        return None
+
+def get_user_roles(user_id: str) -> list[str]:
+    import sqlite3
+    conn = sqlite3.connect(settings.sqlite_path)
+    # Check user_roles table, and fallback to users.roles
+    rows = conn.execute("SELECT role FROM user_roles WHERE user_id = ?", (user_id,)).fetchall()
+    if not rows:
+        user_row = conn.execute("SELECT roles FROM users WHERE id = ?", (user_id,)).fetchone()
+        if user_row and user_row[0]:
+            roles = user_row[0].split(",")
+            conn.close()
+            return roles
+    conn.close()
+    return [r[0] for r in rows] if rows else ["learner"]
+
+def check_permission(user_id: str, required_permission: str) -> bool:
+    roles = get_user_roles(user_id)
+    for role in roles:
+        if required_permission in ROLES.get(role, {}).get("permissions", []):
             return True
-        return user_role == required_role
-
-
-def require_role(required_role: str):
-    """
-    Decorator for FastAPI routes (Mocked for core integration).
-    """
-    def decorator(func):
-        def wrapper(*args, **kwargs):
-            # In a real FastAPI app, this would use Depends(get_current_user)
-            # For core logic wrapping:
-            return func(*args, **kwargs)
-        return wrapper
-    return decorator
+    return False
