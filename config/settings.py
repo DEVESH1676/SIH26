@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     max_upload_size_mb: int = 100
     upload_dir: str = "data/uploads"
     log_level: str = "INFO"
-    log_format: str = "json"
+    log_format: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     default_quiz_questions: int = 10
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}

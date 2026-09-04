@@ -6,10 +6,9 @@ from typing import Optional
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config.settings import get_settings
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+import bcrypt
 
 settings = get_settings()
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 ROLES = {
     "admin":   {"permissions": ["read", "write", "delete", "manage_users", "view_analytics"]},
@@ -42,14 +41,17 @@ def init_auth_db():
     conn.commit()
     conn.close()
 
-# Run DB initialization when module is imported
-init_auth_db()
+# NOTE: DB initialization is handled by core/database.init_db()
+# to avoid duplicate table creation and import-order issues.
 
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
+    try:
+        return bcrypt.checkpw(plain.encode('utf-8'), hashed.encode('utf-8'))
+    except Exception:
+        return False
 
 def create_access_token(data: dict, expires_delta: Optional[datetime.timedelta] = None) -> str:
     to_encode = data.copy()
@@ -63,6 +65,7 @@ def create_refresh_token(data: dict) -> str:
     expire = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
         days=settings.jwt_refresh_token_expiry_days
     )
+    data["iat"] = datetime.datetime.now(datetime.timezone.utc)
     data["exp"] = expire
     data["type"] = "refresh"
     return jwt.encode(data, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
@@ -76,16 +79,22 @@ def decode_token(token: str) -> Optional[dict]:
 def get_user_roles(user_id: str) -> list[str]:
     import sqlite3
     conn = sqlite3.connect(settings.sqlite_path)
-    # Check user_roles table, and fallback to users.roles
-    rows = conn.execute("SELECT role FROM user_roles WHERE user_id = ?", (user_id,)).fetchall()
-    if not rows:
+    try:
+        # Check user_roles table, and fallback to users.roles
+        rows = conn.execute("SELECT role FROM user_roles WHERE user_id = ?", (user_id,)).fetchall()
+        if rows:
+            conn.close()
+            return [r[0] for r in rows]
         user_row = conn.execute("SELECT roles FROM users WHERE id = ?", (user_id,)).fetchone()
         if user_row and user_row[0]:
             roles = user_row[0].split(",")
             conn.close()
             return roles
-    conn.close()
-    return [r[0] for r in rows] if rows else ["learner"]
+    except sqlite3.OperationalError:
+        pass  # Tables may not exist yet
+    finally:
+        conn.close()
+    return ["learner"]
 
 def check_permission(user_id: str, required_permission: str) -> bool:
     roles = get_user_roles(user_id)
@@ -93,3 +102,27 @@ def check_permission(user_id: str, required_permission: str) -> bool:
         if required_permission in ROLES.get(role, {}).get("permissions", []):
             return True
     return False
+
+def require_role(role: str):
+    """Decorator that enforces a specific role is present on the request."""
+    from fastapi import HTTPException
+
+    def decorator(func):
+        from functools import wraps
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            # Extract request from kwargs or args
+            request = kwargs.get("request") or (
+                args[0] if args and hasattr(args[0], "state") else None
+            )
+            if request is None:
+                return await func(*args, **kwargs)
+            user_id = getattr(request.state, "user_id", None)
+            if not user_id:
+                raise HTTPException(status_code=401, detail="Not authenticated")
+            user_roles = get_user_roles(user_id)
+            if role not in user_roles:
+                raise HTTPException(status_code=403, detail=f"Role '{role}' required")
+            return await func(*args, **kwargs)
+        return wrapper
+    return decorator

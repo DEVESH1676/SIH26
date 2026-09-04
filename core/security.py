@@ -5,8 +5,13 @@ from config.settings import get_settings
 
 settings = get_settings()
 logger = logging.getLogger(__name__)
+_audit_db_initialized = False
 
 def init_audit_db():
+    """Initialize audit_log table (idempotent, runs only once)."""
+    global _audit_db_initialized
+    if _audit_db_initialized:
+        return
     import sqlite3
     conn = sqlite3.connect(settings.sqlite_path)
     conn.execute("""
@@ -21,9 +26,7 @@ def init_audit_db():
     """)
     conn.commit()
     conn.close()
-
-# Run DB initialization when module is imported
-init_audit_db()
+    _audit_db_initialized = True
 
 class RateLimiter:
     def __init__(self, max_requests: int = 60, window_seconds: int = 60):

@@ -20,7 +20,7 @@ def setup_cors(app):
 
 async def auth_middleware(request: Request, call_next):
     public_paths = ["/api/health", "/api/auth/login", "/api/auth/register", "/api/auth/refresh", "/docs", "/openapi.json"]
-    if request.url.path in public_paths or request.url.path.startswith("/static"):
+    if request.url.path in public_paths or not request.url.path.startswith("/api/"):
         return await call_next(request)
     auth_header = request.headers.get("Authorization", "")
     if not auth_header.startswith("Bearer "):

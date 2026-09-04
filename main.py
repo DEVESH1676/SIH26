@@ -11,9 +11,8 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from config.settings import get_settings
 from core.database import init_db
-from core.igot_api import IGOTClient
-from core.igot_sync import IGOTSyncService
-from core.rag import CompetencyAnalyzer, CourseRecommender
+from core.classifier import CompetencyAnalyzer
+from core.rag import CourseRecommender
 from core.quiz_engine import QuizEngine
 from core.attempt_tracker import AttemptTracker
 from core.file_processor import FileProcessor
@@ -41,12 +40,8 @@ async def lifespan(app: FastAPI):
     print("  ✓ Database initialized")
 
     # Initialize core services
-    app.state.igot_client = IGOTClient()
-    app.state.igot_sync = IGOTSyncService(app.state.igot_client)
-    await app.state.igot_sync.start()
-
     app.state.competency_analyzer = CompetencyAnalyzer()
-    app.state.course_recommender = CourseRecommender(app.state.igot_client)
+    app.state.course_recommender = CourseRecommender()
     app.state.quiz_engine = QuizEngine()
     app.state.attempt_tracker = AttemptTracker()
     app.state.file_processor = FileProcessor()
@@ -58,7 +53,6 @@ async def lifespan(app: FastAPI):
     print(f"  ✓ iGOT integration: {'enabled' if settings.igot_api_key else 'disabled'}")
     print(f"  ✓ LLM provider: {'Ollama' if settings.ollama_base_url else 'Groq'}")
     yield
-    await app.state.igot_sync.stop()
     print("  ✓ All services stopped")
 
 app = FastAPI(

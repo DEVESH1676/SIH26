@@ -4,8 +4,8 @@ Each function retrieves a pre-loaded resource from app.state (set by lifespan).
 """
 from fastapi import Request
 
-from core.igot_api import IGOTClient
-from core.rag import CompetencyAnalyzer, CourseRecommender
+from core.classifier import CompetencyAnalyzer
+from core.rag import CourseRecommender
 from core.quiz_engine import QuizEngine
 from core.attempt_tracker import AttemptTracker
 from core.file_processor import FileProcessor
@@ -22,9 +22,6 @@ def get_recommender(request: Request) -> CourseRecommender:
 
 def get_quiz_engine(request: Request) -> QuizEngine:
     return request.app.state.quiz_engine
-
-def get_igot_client(request: Request) -> IGOTClient:
-    return request.app.state.igot_client
 
 def get_attempt_tracker(request: Request) -> AttemptTracker:
     return request.app.state.attempt_tracker

@@ -67,30 +67,31 @@ class LearningAnalytics:
         """Calculate training effectiveness metrics."""
         conn = sqlite3.connect(self.db_path)
 
-        query = """
-            SELECT q.title, 
-                   COUNT(DISTINCT qa.learner_id) as enrolled,
-                   AVG(CAST(qa.score AS REAL) / qa.total_questions * 100) as avg_quiz_score,
-                   SUM(CASE WHEN CAST(qa.score AS REAL) / qa.total_questions >= 0.6 THEN 1 ELSE 0 END) as passed
-            FROM quizzes q
-            LEFT JOIN quiz_attempts qa ON q.quiz_id = qa.quiz_id
-            {% if course_id %}WHERE q.quiz_id IN (
-                SELECT quiz_id FROM quiz_questions 
-                WHERE category LIKE '%' || ? || '%'
-            ){% endif %}
-            GROUP BY q.quiz_id
-            ORDER BY enrolled DESC
-        """
-        # Simplified for SQLite
-        rows = conn.execute(
-            """SELECT q.title, COUNT(DISTINCT qa.learner_id),
-                      AVG(CAST(qa.score AS REAL) / qa.total_questions * 100),
-                      SUM(CASE WHEN CAST(qa.score AS REAL) / qa.total_questions >= 0.6 THEN 1 ELSE 0 END)
-               FROM quizzes q
-               LEFT JOIN quiz_attempts qa ON q.quiz_id = qa.quiz_id
-               GROUP BY q.quiz_id
-               ORDER BY enrolled DESC"""
-        ).fetchall()
+        if course_id:
+            rows = conn.execute(
+                """SELECT q.title, COUNT(DISTINCT qa.learner_id) as enrolled,
+                          AVG(CAST(qa.score AS REAL) / qa.total_questions * 100),
+                          SUM(CASE WHEN CAST(qa.score AS REAL) / qa.total_questions >= 0.6 THEN 1 ELSE 0 END)
+                   FROM quizzes q
+                   LEFT JOIN quiz_attempts qa ON q.quiz_id = qa.quiz_id
+                   WHERE q.quiz_id IN (
+                       SELECT quiz_id FROM quiz_questions
+                       WHERE category LIKE '%' || ? || '%'
+                   )
+                   GROUP BY q.quiz_id
+                   ORDER BY enrolled DESC""",
+                (course_id,),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                """SELECT q.title, COUNT(DISTINCT qa.learner_id) as enrolled,
+                          AVG(CAST(qa.score AS REAL) / qa.total_questions * 100),
+                          SUM(CASE WHEN CAST(qa.score AS REAL) / qa.total_questions >= 0.6 THEN 1 ELSE 0 END)
+                   FROM quizzes q
+                   LEFT JOIN quiz_attempts qa ON q.quiz_id = qa.quiz_id
+                   GROUP BY q.quiz_id
+                   ORDER BY enrolled DESC"""
+            ).fetchall()
         conn.close()
 
         return {

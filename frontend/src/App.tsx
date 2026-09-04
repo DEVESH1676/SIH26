@@ -19,6 +19,7 @@ import Profile from './pages/Profile';
 import AdminPanel from './pages/AdminPanel';
 import VirtualAssistant from './components/Assistant/VirtualAssistant';
 import Login from './pages/Login';
+import Register from './pages/Register';
 
 // Auth guard
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -32,6 +33,7 @@ export default function App() {
       <Toaster position="top-right" />
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         <Route
           path="/"
           element={

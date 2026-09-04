@@ -13,12 +13,11 @@ router = APIRouter(prefix="/api", tags=["system"])
 def health_check(request: Request) -> HealthResponse:
     """Returns API health status and loaded model information."""
     models_loaded = (
-        hasattr(request.app.state, "analyzer")
-        and request.app.state.analyzer is not None
+        hasattr(request.app.state, "competency_analyzer")
+        and request.app.state.competency_analyzer is not None
     )
     return HealthResponse(
         status="ok",
-        models_loaded=models_loaded,
-        version="4.0.0",
-        domain="MoSPI AI Learning Platform",
+        database="connected" if models_loaded else "unknown",
+        version="4.0.0"
     )

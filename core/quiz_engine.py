@@ -188,6 +188,7 @@ DO NOT include markdown formatting. Return ONLY the raw JSON object.
     async def get_quiz(self, quiz_id: str) -> dict:
         """Retrieve a quiz by ID."""
         conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
         quiz = conn.execute(
             "SELECT * FROM quizzes WHERE quiz_id = ?", (quiz_id,)
         ).fetchone()
@@ -201,11 +202,8 @@ DO NOT include markdown formatting. Return ONLY the raw JSON object.
         conn.close()
 
         return {
-            "quiz": dict(zip(quiz.keys(), quiz)),
-            "questions": [dict(zip(
-                ["id", "quiz_id", "question", "options", "correct_answer",
-                 "explanation", "difficulty", "category"], q
-            )) for q in questions],
+            "quiz": dict(quiz),
+            "questions": [dict(q) for q in questions],
         }
 
     def calculate_score(self, answers: dict, quiz_questions: list[dict]) -> dict:
@@ -229,7 +227,7 @@ DO NOT include markdown formatting. Return ONLY the raw JSON object.
             if is_correct:
                 correct += 1
             results.append({
-                "question": q["question"],
+                "question": q.get("question", ""),
                 "correct": is_correct,
                 "selected_option": selected,
                 "correct_option": int(q["correct_answer"]),

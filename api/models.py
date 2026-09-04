@@ -215,3 +215,24 @@ class MCQFromFileRequest(BaseModel):
     num_questions: int = Field(default=10)
     difficulty: str = Field(default="intermediate")
     domain: Optional[str] = None
+
+# ── Legacy Pipeline & Classifier Models ──────────────────────
+class LearnerProfileRequest(BaseModel):
+    designation: str
+    profile_text: str
+
+class LearnerProfileResponse(BaseModel):
+    overall_level: str
+    competency_summary: dict
+    skill_gaps: list[str]
+    recommended_pathway: str
+
+class PipelineStatusEvent(BaseModel):
+    stage: str
+    message: str
+    progress: float
+
+class HealthResponse(BaseModel):
+    status: str
+    database: str
+    version: str
