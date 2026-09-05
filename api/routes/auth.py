@@ -1,6 +1,6 @@
 """Authentication routes — login, register, refresh, logout."""
 from fastapi import APIRouter, HTTPException, Request
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 import sqlite3, uuid
 from core.auth import (hash_password, verify_password, create_access_token,
                        create_refresh_token, decode_token, get_user_roles, check_permission)
@@ -13,6 +13,8 @@ class LoginRequest(BaseModel):
     username: str = Field(..., min_length=3, max_length=100)
     password: str = Field(..., min_length=8)
 
+VALID_ROLES = ("admin", "trainer", "learner", "viewer")
+
 class RegisterRequest(BaseModel):
     username: str = Field(..., min_length=3, max_length=100)
     email: str = Field(..., max_length=200)
@@ -20,6 +22,13 @@ class RegisterRequest(BaseModel):
     designation: str = Field(..., max_length=200)
     department: str = Field(..., max_length=200)
     role: str = Field(default="learner")
+
+    @field_validator("role")
+    @classmethod
+    def validate_role(cls, v):
+        if v not in VALID_ROLES:
+            raise ValueError(f"Role must be one of: {', '.join(VALID_ROLES)}")
+        return v
 
 @router.post("/login")
 async def login(req: LoginRequest):

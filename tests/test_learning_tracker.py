@@ -5,18 +5,37 @@ Tests activity logging, learning hours calculation, course progress tracking.
 import os
 import sys
 import tempfile
+import sqlite3
 import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-@pytest.fixture()
-def learning_tracker_fixture(shared_db_path):
-    """Create a temp DB with all tables initialized."""
+@pytest.fixture
+def learning_tracker_fixture():
+    """Create a fresh temp DB for each test and return a LearningTracker instance."""
+    import tempfile
+    db_fd, db_path = tempfile.mkstemp(suffix=".db")
+    os.close(db_fd)
+    
+    from config.settings import get_settings
+    original_path = get_settings().sqlite_path
+    get_settings().sqlite_path = db_path
+    
     from core.database import init_db
     init_db()
+    
     from core.learning_tracker import LearningTracker
-    return LearningTracker(db_path=shared_db_path)
+    tracker = LearningTracker(db_path=db_path)
+    
+    yield tracker
+    
+    # Cleanup
+    try:
+        os.unlink(db_path)
+    except FileNotFoundError:
+        pass
+    get_settings().sqlite_path = original_path
 
 
 class TestLogActivity:
@@ -80,9 +99,9 @@ class TestGetLearningHours:
         assert hours["average_session_minutes"] == 2.5
 
     def test_period_filtering(self, learning_tracker_fixture):
-        import sqlite3, uuid
-        from datetime import datetime, timezone, timedelta
         conn = sqlite3.connect(learning_tracker_fixture.db_path)
+        import uuid
+        from datetime import datetime, timezone, timedelta
         past_date = (datetime.now(timezone.utc) - timedelta(days=2)).isoformat()
         conn.execute("INSERT INTO learning_sessions (session_id, learner_id, activity_type, duration_seconds, started_at) VALUES (?, ?, ?, ?, ?)",
                      (str(uuid.uuid4())[:8], "l1", "quiz", 3600, past_date))
@@ -145,7 +164,6 @@ class TestGetLearnerDashboardData:
     def test_dashboard_with_data(self, learning_tracker_fixture):
         learning_tracker_fixture.log_activity("l1", "quiz", "q1", "quiz", 300)
         learning_tracker_fixture.update_course_progress("l1", "c1", 50.0)
-        import sqlite3
         conn = sqlite3.connect(learning_tracker_fixture.db_path)
         conn.execute(
             "INSERT INTO competency_scores (learner_id, competency_id, score) VALUES (?, ?, ?)",

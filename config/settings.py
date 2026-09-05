@@ -37,5 +37,10 @@ class Settings(BaseSettings):
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
+_cached_settings = None
+
 def get_settings() -> Settings:
-    return Settings()
+    global _cached_settings
+    if _cached_settings is None:
+        _cached_settings = Settings()
+    return _cached_settings

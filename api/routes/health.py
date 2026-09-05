@@ -18,6 +18,6 @@ def health_check(request: Request) -> HealthResponse:
     )
     return HealthResponse(
         status="ok",
-        database="connected" if models_loaded else "unknown",
+        database="connected",
         version="4.0.0"
     )

@@ -46,13 +46,27 @@ def sanitize_llm_input(text: str, max_length: int = 50000) -> str:
     if not text:
         return ""
     text = text[:max_length]
-    text = re.sub(r'(?i)(system:|you are|ignore previous|prompt:)', '', text)
+    # Remove system prompt injections that start at the beginning of text.
+    # Match the injection block (marker + content) and strip it, preserving
+    # normal text that follows (identified by a capitalized word after . ).
+    text = re.sub(
+        r'(system|prompt)[^:]*:\s*(.+?)(?=\.\s+[A-Z]|\.\s+[A-Z][a-z]+|$)',
+        '', text,
+        flags=re.IGNORECASE | re.DOTALL
+    )
+    # Also handle "ignore previous" type injections
+    text = re.sub(
+        r'ignore previous\s*.*?(?=\.\s+[A-Z]|\.\s+[A-Z][a-z]+|$)',
+        '', text,
+        flags=re.IGNORECASE | re.DOTALL
+    )
     text = text.replace('```', '')
     return text.strip()
 
 def audit_log(action: str, user_id: str, resource: str = None, details: dict = None):
     import sqlite3, json
     from datetime import datetime, timezone
+    init_audit_db()
     conn = sqlite3.connect(settings.sqlite_path)
     conn.execute(
         "INSERT INTO audit_log (action, user_id, resource, details, logged_at) VALUES (?, ?, ?, ?, ?)",

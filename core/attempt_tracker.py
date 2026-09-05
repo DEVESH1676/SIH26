@@ -53,7 +53,7 @@ class AttemptTracker:
         rows = conn.execute(
             """SELECT qa.*, q.title as quiz_title, q.difficulty as quiz_difficulty
                FROM quiz_attempts qa
-               JOIN quizzes q ON qa.quiz_id = q.quiz_id
+               LEFT JOIN quizzes q ON qa.quiz_id = q.quiz_id
                WHERE qa.learner_id = ?
                ORDER BY qa.completed_at DESC
                LIMIT ?""",

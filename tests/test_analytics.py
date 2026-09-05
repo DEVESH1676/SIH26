@@ -12,14 +12,24 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 @pytest.fixture
-def analytics_db(shared_db_path):
-    """Create a temp DB with analytics test data and return an Analytics instance."""
+def analytics_db():
+    """Create a fresh temp DB with analytics test data for each test."""
+    db_fd, db_path = tempfile.mkstemp(suffix=".db")
+    os.close(db_fd)
+    from config.settings import get_settings
+    original_path = get_settings().sqlite_path
+    get_settings().sqlite_path = db_path
+    # Also set on core.database module-level settings (init_db reads from there)
+    from core.database import settings as db_settings
+    original_db_path = db_settings.sqlite_path
+    db_settings.sqlite_path = db_path
+
     from core.database import init_db
     init_db()
 
-    # Insert test data for analytics
-    conn = sqlite3.connect(shared_db_path)
+    conn = sqlite3.connect(db_path)
 
+    # Insert test data for analytics
     # Create a quiz and questions (required for training_effectiveness)
     conn.execute(
         "INSERT INTO quizzes (quiz_id, title, source_text, difficulty, domain, num_questions) VALUES (?, ?, ?, ?, ?, ?)",
@@ -74,7 +84,17 @@ def analytics_db(shared_db_path):
     conn.close()
 
     from core.analytics import LearningAnalytics
-    return LearningAnalytics(db_path=shared_db_path)
+    analytics = LearningAnalytics(db_path=db_path)
+
+    try:
+        yield analytics
+    finally:
+        try:
+            os.unlink(db_path)
+        except FileNotFoundError:
+            pass
+        get_settings().sqlite_path = original_path
+        db_settings.sqlite_path = original_db_path
 
 
 class TestAdminOverview:

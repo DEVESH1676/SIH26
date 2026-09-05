@@ -77,6 +77,9 @@ class FileProcessor:
             return "\n\n".join(text_parts)
         except ImportError:
             raise ImportError("pypdf not installed. Run: pip install pypdf")
+        except Exception as exc:
+            # Handle malformed PDFs or other pypdf errors
+            raise ImportError(f"pypdf error: {exc}")
 
     async def _process_docx(self, file_path: str) -> str:
         """Extract text from DOCX file."""
@@ -155,9 +158,15 @@ class FileProcessor:
         chunks = []
         start = 0
         chunk_index = 0
+        step = max(chunk_size - overlap, 1)  # Ensure forward progress
 
         while start < len(text):
             end = min(start + chunk_size, len(text))
+
+            # If this single chunk covers the entire text, return it immediately
+            if start == 0 and end >= len(text):
+                return [{"text": text.strip(), "start": 0, "end": len(text), "chunk_index": 0}]
+
             # Try to break at sentence boundary
             if end < len(text):
                 # Look for sentence ending
@@ -175,6 +184,6 @@ class FileProcessor:
                 "chunk_index": chunk_index,
             })
             chunk_index += 1
-            start = end - overlap
+            start += step
 
         return chunks

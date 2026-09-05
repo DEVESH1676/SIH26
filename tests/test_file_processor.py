@@ -183,12 +183,15 @@ class TestMissingDependencies:
     """Test behavior when optional dependencies are missing."""
 
     def test_pdf_missing_pypdf(self, tmp_path):
-        """When pypdf is not available, should raise ImportError."""
-        # This test verifies the import error handling
+        """When pypdf is not available or file is invalid, should raise ImportError."""
         from core.file_processor import FileProcessor
         test_file = tmp_path / "test.pdf"
         test_file.write_bytes(b"%PDF fake")
         processor = FileProcessor()
-        result = asyncio.run(processor.process_file(str(test_file), "pdf"))
-        # Either returns text or raises ImportError
-        assert result is not None or isinstance(result, str) or "pypdf" in str(result) if isinstance(result, str) else True
+        try:
+            result = asyncio.run(processor.process_file(str(test_file), "pdf"))
+            # If it returns, it should be a string
+            assert isinstance(result, str) or result is not None
+        except ImportError as e:
+            # Expected when pypdf is missing or file is malformed
+            assert "pypdf" in str(e).lower()

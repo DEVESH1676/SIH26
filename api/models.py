@@ -222,10 +222,10 @@ class LearnerProfileRequest(BaseModel):
     profile_text: str
 
 class LearnerProfileResponse(BaseModel):
-    overall_level: str
+    current_skills: list[dict]
+    skill_gaps: list[dict]
     competency_summary: dict
-    skill_gaps: list[str]
-    recommended_pathway: str
+    analysis_summary: str
 
 class PipelineStatusEvent(BaseModel):
     stage: str
