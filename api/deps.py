@@ -4,13 +4,13 @@ Each function retrieves a pre-loaded resource from app.state (set by lifespan).
 """
 from fastapi import Request
 
-from core.classifier import CompetencyAnalyzer
-from core.rag import CourseRecommender
-from core.quiz_engine import QuizEngine
+from core.analytics import LearningAnalytics
 from core.attempt_tracker import AttemptTracker
+from core.classifier import CompetencyAnalyzer
 from core.file_processor import FileProcessor
 from core.learning_tracker import LearningTracker
-from core.analytics import LearningAnalytics
+from core.quiz_engine import QuizEngine
+from core.rag import CourseRecommender
 from core.virtual_assistant import VirtualAssistant
 
 

@@ -1,6 +1,9 @@
 """Security utilities — sanitization, rate limiting, audit logging."""
-import re, time, logging
+import logging
+import re
+import time
 from collections import defaultdict
+
 from config.settings import get_settings
 
 settings = get_settings()
@@ -63,8 +66,9 @@ def sanitize_llm_input(text: str, max_length: int = 50000) -> str:
     text = text.replace('```', '')
     return text.strip()
 
-def audit_log(action: str, user_id: str, resource: str = None, details: dict = None):
-    import sqlite3, json
+def audit_log(action: str, user_id: str, resource: str | None = None, details: dict | None = None):
+    import json
+    import sqlite3
     from datetime import datetime, timezone
     init_audit_db()
     conn = sqlite3.connect(settings.sqlite_path)

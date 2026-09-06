@@ -3,11 +3,8 @@ Multi-format file processor for learning materials.
 Handles PDF, DOCX, PPTX, video (with transcription), and audio extraction.
 """
 import os
-import sys
-import tempfile
-import asyncio
 import subprocess
-from typing import Optional, Tuple
+import sys
 from pathlib import Path
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -113,7 +110,7 @@ class FileProcessor:
         with open(file_path, "r", encoding="utf-8") as f:
             return f.read()
 
-    async def _process_video(self, file_path: str) -> Tuple[str, list[dict]]:
+    async def _process_video(self, file_path: str) -> tuple[str, list[dict]]:
         """
         Extract transcription from video file.
         Uses Whisper (local Ollama) for transcription.
@@ -133,9 +130,9 @@ class FileProcessor:
             if result.returncode == 0:
                 return result.stdout, []
             else:
-                raise Exception(f"Whisper transcription failed: {result.stderr}")
+                raise RuntimeError(f"Whisper transcription failed: {result.stderr}")
         except FileNotFoundError:
-            raise Exception(
+            raise RuntimeError(
                 "Ollama not available. Install Ollama and run: ollama pull whisper"
             )
 

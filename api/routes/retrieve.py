@@ -3,11 +3,12 @@ MoSPI AI Learning Platform — Course Recommendation Endpoint
 POST /api/recommend-pathway — Queries course catalog and generates a personalized learning pathway.
 """
 import asyncio
+
 from fastapi import APIRouter, Depends
 
-from core.rag import CourseRecommender
-from api.models import PathwayRequest, PathwayResponse
 from api.deps import get_recommender
+from api.models import PathwayRequest, PathwayResponse
+from core.rag import CourseRecommender
 
 router = APIRouter(prefix="/api", tags=["pathway"])
 

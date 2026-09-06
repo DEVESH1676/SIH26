@@ -1,9 +1,9 @@
 """
 Quiz attempt tracker — records and analyzes learner quiz attempts.
 """
+import json
 import os
 import sys
-import json
 import uuid
 from datetime import datetime, timezone
 

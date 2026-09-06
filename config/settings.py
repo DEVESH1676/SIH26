@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     chroma_persist_dir: str = "data/chroma"
     chroma_collection: str = "mospi_embeddings"
     groq_api_key: Optional[str] = None
+    use_groq: bool = False
     groq_model: str = "llama-3.3-70b-versatile"
     groq_embed_model: str = "all-MiniLM-L6-v2"
     ollama_base_url: Optional[str] = None
@@ -27,7 +28,7 @@ class Settings(BaseSettings):
     nssta_base_url: Optional[str] = None
     nssta_api_key: Optional[str] = None
     rate_limit_per_minute: int = 60
-    cors_origins: list[str] = ["http://localhost:5173"]
+    cors_origins: list[str] = ["http://localhost:5173", "http://localhost:5174"]
     max_document_chars: int = 50000
     max_upload_size_mb: int = 100
     upload_dir: str = "data/uploads"

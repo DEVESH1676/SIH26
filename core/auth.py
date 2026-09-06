@@ -1,12 +1,15 @@
 """
 Authentication module — JWT-based auth with RBAC.
 """
-import os, sys, datetime
-from typing import Optional
+import datetime
+import os
+import sys
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config.settings import get_settings
-from jose import JWTError, jwt
 import bcrypt
+from jose import JWTError, jwt
+
+from config.settings import get_settings
 
 settings = get_settings()
 
@@ -53,7 +56,7 @@ def verify_password(plain: str, hashed: str) -> bool:
     except Exception:
         return False
 
-def create_access_token(data: dict, expires_delta: Optional[datetime.timedelta] = None) -> str:
+def create_access_token(data: dict, expires_delta: datetime.timedelta | None = None) -> str:
     to_encode = data.copy()
     expire = datetime.datetime.now(datetime.timezone.utc) + (
         expires_delta or datetime.timedelta(minutes=settings.jwt_access_token_expiry_minutes)
@@ -70,7 +73,7 @@ def create_refresh_token(data: dict) -> str:
     data["type"] = "refresh"
     return jwt.encode(data, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
 
-def decode_token(token: str) -> Optional[dict]:
+def decode_token(token: str) -> dict | None:
     try:
         return jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
     except JWTError:

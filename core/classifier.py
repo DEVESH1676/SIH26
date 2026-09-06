@@ -3,9 +3,10 @@ Competency Analyzer — Skill Gap Analysis Engine for MoSPI Officials.
 Analyzes official profiles to identify current competencies and
 missing skill gaps against the MoSPI competency framework.
 """
+import json
 import os
 import sys
-import json
+
 import requests
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -13,7 +14,6 @@ from config.settings import get_settings
 from core.competency_framework import (
     COMPETENCY_FRAMEWORK,
     get_all_competency_ids,
-    search_competencies,
 )
 
 settings = get_settings()

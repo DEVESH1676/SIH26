@@ -146,6 +146,28 @@ export async function generatePlan(req: LearnerProfileRequest): Promise<any> {
   });
 }
 
+export async function streamPlan(req: LearnerProfileRequest): Promise<ReadableStream> {
+  const token = getAccessToken();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(`${API_BASE}/pipeline/stream`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(req),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Stream failed' }));
+    throw new Error(err.detail || `Stream error ${res.status}`);
+  }
+  return res.body as unknown as ReadableStream;
+}
+
 // ── Quiz ────────────────────────────────────────────────────
 export async function generateQuiz(sourceText: string, numQuestions = 10, difficulty = 'intermediate'): Promise<QuizResponse> {
   return apiFetch('/quiz/generate', {

@@ -1,10 +1,18 @@
 """Authentication routes — login, register, refresh, logout."""
+import sqlite3
+import uuid
+
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field, field_validator
-import sqlite3, uuid
-from core.auth import (hash_password, verify_password, create_access_token,
-                       create_refresh_token, decode_token, get_user_roles, check_permission)
+
 from config.settings import get_settings
+from core.auth import (
+    create_access_token,
+    create_refresh_token,
+    decode_token,
+    hash_password,
+    verify_password,
+)
 
 settings = get_settings()
 router = APIRouter(prefix="/api/auth", tags=["authentication"])

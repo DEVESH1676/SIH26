@@ -1,12 +1,14 @@
 """FastAPI middleware — auth, RBAC, rate limiting, CORS."""
-from fastapi import Request, HTTPException, status
-from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
-import time, logging
+import logging
+import time
 
-from core.auth import decode_token, check_permission
-from core.security import RateLimiter
+from fastapi import Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+
 from config.settings import get_settings
+from core.auth import check_permission, decode_token
+from core.security import RateLimiter
 
 settings = get_settings()
 rate_limiter = RateLimiter(max_requests=settings.rate_limit_per_minute, window_seconds=60)

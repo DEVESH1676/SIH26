@@ -3,14 +3,11 @@ Enhanced Quiz Engine — MCQ, subjective, and adaptive quiz generation.
 Generates quizzes from learning materials with difficulty calibration
 and question categorization.
 """
-import os
-import sys
 import json
-import uuid
-import asyncio
+import os
 import sqlite3
-from datetime import datetime, timezone
-from typing import Optional
+import sys
+import uuid
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config.settings import get_settings
@@ -23,7 +20,7 @@ settings = get_settings()
 class QuizEngine:
     """Generate and manage quizzes from learning materials."""
 
-    def __init__(self, db_path: str = None):
+    def __init__(self, db_path: str | None = None):
         self.db_path = db_path or settings.sqlite_path
         os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
         self._init_db()
@@ -78,9 +75,9 @@ class QuizEngine:
     async def generate_mcqs(
         self,
         document_text: str,
-        num_questions: int = None,
+        num_questions: int | None = None,
         difficulty: str = "intermediate",
-        domain: str = None,
+        domain: str | None = None,
     ) -> dict:
         """
         Generate MCQs from learning material text.
@@ -100,7 +97,7 @@ class QuizEngine:
         if domain:
             domain_prompt = f"\nFocus on competencies in the '{domain}' domain."
 
-        prompt = f"""You are an AI Assessment Engine for MoSPI (Ministry of Statistics and Programme Implementation), India.
+        prompt = f"""You are an AI Assessment Engine for MoSPI (Ministry of Statistics and Programme Implementation), India.{domain_prompt}
 Generate {num_questions} Multiple Choice Questions (MCQs) based ONLY on the following learning material.
 
 ## Learning Material:
@@ -139,7 +136,7 @@ DO NOT include markdown formatting. Return ONLY the raw JSON object.
             parsed = json.loads(clean)
 
             quiz_id = str(uuid.uuid4())[:8]
-            quiz_title = parsed.get("quiz_title", f"Quiz on learning material")
+            quiz_title = parsed.get("quiz_title", "Quiz on learning material")
 
             # Save to database
             conn = sqlite3.connect(self.db_path)
@@ -164,10 +161,10 @@ DO NOT include markdown formatting. Return ONLY the raw JSON object.
                 "questions": parsed.get("questions", []),
             }
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             return {
                 "status": "error",
-                "message": f"Failed to generate quiz: {str(e)}",
+                "message": f"Failed to generate quiz: {e!s}",
                 "raw_output": raw_output[:500],
             }
 
@@ -175,9 +172,9 @@ DO NOT include markdown formatting. Return ONLY the raw JSON object.
         self,
         file_path: str,
         file_type: str,
-        num_questions: int = None,
+        num_questions: int | None = None,
         difficulty: str = "intermediate",
-        domain: str = None,
+        domain: str | None = None,
     ) -> dict:
         """Generate quiz from an uploaded file (PDF, DOCX, PPTX, etc.)."""
         text = await self.file_processor.process_file(file_path, file_type)

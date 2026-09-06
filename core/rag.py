@@ -4,9 +4,9 @@ Uses direct REST calls to Ollama to avoid Langchain hanging issues.
 """
 import os
 import sys
-import json
+from typing import Any
+
 import requests
-from typing import Dict, Any, List
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config.settings import get_settings
@@ -23,7 +23,7 @@ def _call_llm(prompt: str) -> str:
             response = requests.post(
                 "https://api.groq.com/openai/v1/chat/completions",
                 headers={
-                    "Authorization": f"Bearer {config.GROQ_API_KEY}",
+                    "Authorization": f"Bearer {settings.groq_api_key}",
                     "Content-Type": "application/json",
                 },
                 json={
@@ -51,8 +51,8 @@ def _call_llm(prompt: str) -> str:
                 return result.get('message', {}).get('content', "Error: No content returned").strip()
             else:
                 return f"Error: Ollama API returned HTTP {response.status_code}\n{response.text}"
-    except Exception as e:
-        return f"Error connecting to LLM: {str(e)}"
+    except Exception as e:  # noqa: BLE001
+        return f"Error connecting to LLM: {e!s}"
 
 
 class CourseRecommender:
@@ -62,7 +62,7 @@ class CourseRecommender:
         self.collection = get_chroma_collection() # Note: To be pointed to 'courses' later
         self.embedding_model = get_embedding_model()
     
-    def suggest_courses(self, skill_gaps: List[str], k: int = 3) -> Dict[str, Any]:
+    def suggest_courses(self, skill_gaps: list[str], k: int = 3) -> dict[str, Any]:
         """
         Retrieve K most relevant courses for the given skill gaps.
         """
@@ -138,10 +138,10 @@ if __name__ == "__main__":
     print("Initializing Learning Engines...")
     recommender = CourseRecommender()
     
-    print(f"\n=============================================")
-    print(f"Testing CourseRecommender:")
+    print("\n=============================================")
+    print("Testing CourseRecommender:")
     gaps = ["Data Visualization with Python", "Advanced SQL"]
     rec_result = recommender.suggest_courses(gaps)
     print("\nPathway:")
     print(rec_result["suggested_pathway"])
-    print(f"=============================================\n")
+    print("=============================================\n")

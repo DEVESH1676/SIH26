@@ -3,12 +3,9 @@ AI Virtual Assistant for MoSPI Learning Platform.
 Provides real-time learner support, course recommendations,
 and learning path guidance.
 """
+import json
 import os
 import sys
-import json
-import sqlite3
-from datetime import datetime, timezone
-from typing import Optional
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config.settings import get_settings
@@ -20,13 +17,13 @@ settings = get_settings()
 class VirtualAssistant:
     """AI-powered learning assistant for official support."""
 
-    def __init__(self, db_path: str = None):
+    def __init__(self, db_path: str | None = None):
         self.db_path = db_path or settings.sqlite_path
 
     async def respond(
         self,
         user_message: str,
-        user_context: dict = None,
+        user_context: dict | None = None,
     ) -> dict:
         """
         Process user message and return intelligent response.
@@ -62,8 +59,6 @@ class VirtualAssistant:
                 f"Currently enrolled: {', '.join(user_context['active_courses'])}"
             )
 
-        context_str = "\n".join(context_parts) if context_parts else "No additional context available."
-
         intent_prompt = f"""Classify the user's intent into one of these categories:
 - course_recommendation: User wants course suggestions
 - quiz_help: User needs help with a quiz or assessment
@@ -82,7 +77,7 @@ Return ONLY: {{ "intent": "category_name" }}
         intent = "general"
         try:
             intent = json.loads(intent_raw.strip())["intent"]
-        except Exception:
+        except Exception:  # noqa: S110, BLE001
             pass
 
         # Build response based on intent
@@ -187,7 +182,7 @@ Return ONLY: {{ "intent": "category_name" }}
         self,
         user_message: str,
         language: str = "en",
-        user_context: dict = None,
+        user_context: dict | None = None,
     ) -> dict:
         """
         Respond in the user's preferred language.

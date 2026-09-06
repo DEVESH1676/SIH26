@@ -2,10 +2,8 @@
 Pydantic models for the MoSPI Learning Platform API.
 Replaces all IT-ticket-centric models.
 """
-from pydantic import BaseModel, Field
-from typing import Optional
-from datetime import datetime
 
+from pydantic import BaseModel, Field
 
 # ── User Models ──────────────────────────────────────────────
 
@@ -43,7 +41,7 @@ class CourseResponse(BaseModel):
 
 class CourseRecommendation(BaseModel):
     courses: list[CourseResponse]
-    tpac_programmes: Optional[list[dict]] = []
+    tpac_programmes: list[dict] | None = []
     estimated_hours: float
     recommended_sequence: list[dict]
     source: str  # "igot" | "fallback"
@@ -56,8 +54,8 @@ class CompetencyLevel(BaseModel):
     competency_name: str
     score: float
     max_score: float = 5.0
-    assessed_at: Optional[str] = None
-    trend: Optional[str] = None  # "improving" | "stable" | "declining"
+    assessed_at: str | None = None
+    trend: str | None = None  # "improving" | "stable" | "declining"
 
 
 class CompetencySummary(BaseModel):
@@ -94,8 +92,8 @@ class QuizCreate(BaseModel):
     source_text: str
     num_questions: int = Field(default=10, ge=1, le=50)
     difficulty: str = Field(default="intermediate")
-    domain: Optional[str] = None
-    source_file: Optional[str] = None
+    domain: str | None = None
+    source_file: str | None = None
 
 
 class QuizResponse(BaseModel):
@@ -135,14 +133,14 @@ class LearningHoursResponse(BaseModel):
     total_sessions: int
     total_hours: float
     average_session_minutes: float
-    first_session: Optional[str] = None
-    last_session: Optional[str] = None
+    first_session: str | None = None
+    last_session: str | None = None
 
 
 class CourseProgress(BaseModel):
     course_id: str
     progress: float  # 0-100
-    completed_at: Optional[str] = None
+    completed_at: str | None = None
 
 
 # ── Analytics Models ─────────────────────────────────────────
@@ -189,7 +187,7 @@ class AdminAnalyticsResponse(BaseModel):
 class AssistantRequest(BaseModel):
     message: str
     language: str = Field(default="en")
-    user_context: Optional[dict] = None
+    user_context: dict | None = None
 
 
 class AssistantResponse(BaseModel):
@@ -214,7 +212,7 @@ class MCQFromFileRequest(BaseModel):
     file_type: str
     num_questions: int = Field(default=10)
     difficulty: str = Field(default="intermediate")
-    domain: Optional[str] = None
+    domain: str | None = None
 
 # ── Legacy Pipeline & Classifier Models ──────────────────────
 class LearnerProfileRequest(BaseModel):

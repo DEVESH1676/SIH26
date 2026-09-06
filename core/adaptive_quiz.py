@@ -1,9 +1,6 @@
 """
 Adaptive Quiz Engine — Difficulty adjusts based on learner performance.
 """
-import asyncio
-import json
-from typing import Optional
 
 from config.settings import get_settings
 from core.quiz_engine import QuizEngine

@@ -3,9 +3,8 @@ Admin Analytics Engine — Organization-wide insights, workforce analytics,
 predictive skill needs, and training effectiveness.
 """
 import os
-import sys
 import sqlite3
-from datetime import datetime, timedelta
+import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config.settings import get_settings

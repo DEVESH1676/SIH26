@@ -1,8 +1,9 @@
 import os
-import pandas as pd
-import chromadb
-from sentence_transformers import SentenceTransformer
 import sys
+
+import chromadb
+import pandas as pd
+from sentence_transformers import SentenceTransformer
 
 # Hack to allow absolute imports from parent directory
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

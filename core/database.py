@@ -2,9 +2,8 @@
 Database initialization — SQLite schema creation and Alembic setup.
 """
 import os
-import sys
 import sqlite3
-from pathlib import Path
+import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config.settings import get_settings

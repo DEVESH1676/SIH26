@@ -2,11 +2,11 @@
 Learning Hours & Progress Tracker.
 Tracks total learning time, course progress, and activity logs.
 """
-import os
-import sys
 import json
+import os
 import sqlite3
-from datetime import datetime, timezone, timedelta
+import sys
+from datetime import datetime, timedelta, timezone
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config.settings import get_settings
@@ -17,7 +17,7 @@ settings = get_settings()
 class LearningTracker:
     """Track learning hours, progress, and activity for each learner."""
 
-    def __init__(self, db_path: str = None):
+    def __init__(self, db_path: str | None = None):
         self.db_path = db_path or settings.sqlite_path
         os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
         self._init_db()
@@ -64,10 +64,10 @@ class LearningTracker:
         self,
         learner_id: str,
         activity_type: str,
-        resource_id: str = None,
-        resource_type: str = None,
+        resource_id: str | None = None,
+        resource_type: str | None = None,
         duration_seconds: int = 0,
-        metadata: dict = None,
+        metadata: dict | None = None,
     ) -> str:
         """Log a learning activity session."""
         import uuid
