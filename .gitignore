@@ -34,8 +34,15 @@ data/chroma/*
 Thumbs.db
 
 # Frontend
+node_modules/
+dist/
+dist-ssr/
 frontend/node_modules/
 frontend/dist/
+frontend-v2/node_modules/
+frontend-v2/dist/
+frontend_om/node_modules/
+frontend_om/dist/
 
 # Logs
 *.log
